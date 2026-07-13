@@ -145,6 +145,21 @@ class JunkCleanReducerTest {
         assertEquals("clean", cleanFailure.errorMessage)
     }
 
+    @Test
+    fun `stop dialog preserves the interrupted phase until dismissed`() {
+        val shown =
+            JunkCleanReducer.reduce(
+                JunkCleanUiState(phase = JunkCleanPhase.Preview),
+                JunkCleanAction.StopDialogShown(JunkCleanPhase.Scanning),
+            )
+        val dismissed = JunkCleanReducer.reduce(shown, JunkCleanAction.StopDialogDismissed)
+
+        assertTrue(shown.showStopDialog)
+        assertEquals(JunkCleanPhase.Scanning, shown.stopDialogPhase)
+        assertFalse(dismissed.showStopDialog)
+        assertNull(dismissed.stopDialogPhase)
+    }
+
     private fun scanResult(vararg files: JunkFile): ScanResult {
         val items = files.toList()
         return ScanResult(
