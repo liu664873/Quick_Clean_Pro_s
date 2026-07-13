@@ -1,0 +1,15 @@
+package __PACKAGE__.feature.__FEATURE__.presentation
+
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class FeatureReducerTest {
+    @Test
+    fun `loading success reaches content`() {
+        val loading = FeatureReducer.reduce(FeatureUiState(), FeatureAction.LoadRequested)
+        val content = FeatureReducer.reduce(loading, FeatureAction.LoadSucceeded)
+
+        assertEquals(FeaturePhase.Loading, loading.phase)
+        assertEquals(FeaturePhase.Content, content.phase)
+    }
+}

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickcleanpro.local/product.schema.json",
+  "title": "QuickClean product configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "identity", "version", "legal", "advertising", "services", "analytics"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applicationId", "appName", "profileKey", "themeKey"],
+      "properties": {
+        "applicationId": { "type": "string", "pattern": "^[a-zA-Z][a-zA-Z0-9_]*(\\.[a-zA-Z][a-zA-Z0-9_]*)+$" },
+        "appName": { "type": "string", "minLength": 1 },
+        "profileKey": { "type": "string", "minLength": 1 },
+        "themeKey": { "type": "string", "minLength": 1 }
+      }
+    },
+    "version": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "name"],
+      "properties": {
+        "code": { "type": "integer", "minimum": 1 },
+        "name": { "type": "string", "minLength": 1 }
+      }
+    },
+    "legal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["privacyUrl", "termsUrl"],
+      "properties": {
+        "privacyUrl": { "type": "string", "pattern": "^https://" },
+        "termsUrl": { "type": "string", "pattern": "^https://" }
+      }
+    },
+    "advertising": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defaultTopic", "debugOverrideMode", "policyFile", "admob"],
+      "properties": {
+        "defaultTopic": { "type": "string", "minLength": 1 },
+        "debugOverrideMode": { "type": "string", "minLength": 1 },
+        "policyFile": { "const": "config/ad_policy.json" },
+        "admob": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["appId", "bannerId", "interstitialId", "nativeId", "openId", "rewardedId", "nativeIds"],
+          "properties": {
+            "appId": { "type": "string", "minLength": 1 },
+            "bannerId": { "type": "string", "minLength": 1 },
+            "interstitialId": { "type": "string", "minLength": 1 },
+            "nativeId": { "type": "string", "minLength": 1 },
+            "openId": { "type": "string", "minLength": 1 },
+            "rewardedId": { "type": "string", "minLength": 1 },
+            "nativeIds": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["highPriceID", "midPriceID", "lowPriceID"],
+                "properties": {
+                  "highPriceID": { "type": "string", "minLength": 1 },
+                  "midPriceID": { "type": "string", "minLength": 1 },
+                  "lowPriceID": { "type": "string", "minLength": 1 }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "services": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["releaseHost", "testHost", "playIntegrityCloudProjectNumber"],
+      "properties": {
+        "releaseHost": { "type": "string", "pattern": "^https://" },
+        "testHost": { "type": "string", "minLength": 1 },
+        "playIntegrityCloudProjectNumber": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "analytics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["thinkingAppKey", "thinkingServerUrl"],
+      "properties": {
+        "thinkingAppKey": { "type": "string", "minLength": 1 },
+        "thinkingServerUrl": { "type": "string", "pattern": "^https://" }
+      }
+    }
+  }
+}

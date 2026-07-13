@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="duplicate_files_count">
+        <item quantity="one">%1$d doppelte Datei</item>
+        <item quantity="other">%1$d doppelte Dateien</item>
+    </plurals>
+    <plurals name="locked_apps_count">
+        <item quantity="one">%1$d gesperrte App</item>
+        <item quantity="other">%1$d gesperrte Apps</item>
+    </plurals>
+    <plurals name="launch_times_count">
+        <item quantity="one">%1$d Mal</item>
+        <item quantity="other">%1$d Mal</item>
+    </plurals>
+    <plurals name="notifications_blocked_count">
+        <item quantity="one">%1$d Benachrichtigung blockiert</item>
+        <item quantity="other">%1$d Benachrichtigungen blockiert</item>
+    </plurals>
+    <plurals name="notifications_count">
+        <item quantity="one">Benachrichtigung</item>
+        <item quantity="other">Benachrichtigungen</item>
+    </plurals>
+</resources>

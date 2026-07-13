@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "identity": {
+    "applicationId": "com.quickcleanpro.phonecleaner",
+    "appName": "Quick Clean PRO",
+    "profileKey": "quickcleanpro",
+    "themeKey": "quickclean_pro"
+  },
+  "version": {
+    "code": 9,
+    "name": "1.0.8"
+  },
+  "legal": {
+    "privacyUrl": "https://sites.google.com/view/quick-clean-pro-privacy-policy/home",
+    "termsUrl": "https://sites.google.com/view/quickcleanpro-termsconditions/home"
+  },
+  "advertising": {
+    "defaultTopic": "all",
+    "debugOverrideMode": "POLICY",
+    "policyFile": "config/ad_policy.json",
+    "admob": {
+      "appId": "ca-app-pub-3106003114382927~2453806891",
+      "bannerId": "ca-app-pub-3940256099942544/6300978111",
+      "interstitialId": "ca-app-pub-3106003114382927/8823774127",
+      "nativeId": "ca-app-pub-3940256099942544/2247696110",
+      "openId": "ca-app-pub-3106003114382927/5090176158",
+      "rewardedId": "ca-app-pub-3940256099942544/5224354917",
+      "nativeIds": [
+        {
+          "highPriceID": "ca-app-pub-3940256099942544/2247696110",
+          "midPriceID": "ca-app-pub-3940256099942544/2247696110",
+          "lowPriceID": "ca-app-pub-3940256099942544/2247696110"
+        }
+      ]
+    }
+  },
+  "services": {
+    "releaseHost": "https://api.newminigame.online",
+    "testHost": "http://192.168.111.227:10002",
+    "playIntegrityCloudProjectNumber": 306607887185
+  },
+  "analytics": {
+    "thinkingAppKey": "52530f06e5a44d7886a887f4c4ca82df",
+    "thinkingServerUrl": "https://mar2.top"
+  }
+}

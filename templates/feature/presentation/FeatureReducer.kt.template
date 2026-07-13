@@ -1,0 +1,14 @@
+package __PACKAGE__.feature.__FEATURE__.presentation
+
+object FeatureReducer {
+    fun reduce(state: FeatureUiState, action: FeatureAction): FeatureUiState =
+        when (action) {
+            FeatureAction.LoadRequested ->
+                state.copy(phase = FeaturePhase.Loading, errorMessage = null)
+            FeatureAction.LoadSucceeded ->
+                state.copy(phase = FeaturePhase.Content, errorMessage = null)
+            is FeatureAction.LoadFailed ->
+                state.copy(phase = FeaturePhase.Error, errorMessage = action.message)
+            FeatureAction.BackClicked -> state
+        }
+}

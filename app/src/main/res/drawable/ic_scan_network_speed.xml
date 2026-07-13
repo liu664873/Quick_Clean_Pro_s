@@ -1,0 +1,24 @@
+<!--
+  ~ Copyright (C) 2026 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="74dp"
+    android:height="74dp"
+    android:viewportWidth="74"
+    android:viewportHeight="74">
+  <path
+      android:pathData="M36.997,6.167C54.026,6.167 67.831,19.971 67.831,37C67.831,54.028 54.026,67.833 36.997,67.833C19.969,67.833 6.164,54.028 6.164,37C6.164,19.971 19.969,6.167 36.997,6.167ZM51.169,22.828C50.538,22.198 49.546,22.111 48.815,22.624C39.907,28.877 34.878,32.579 33.727,33.729C31.921,35.536 31.921,38.464 33.727,40.27C35.533,42.076 38.462,42.076 40.268,40.27C40.943,39.595 44.641,34.563 51.362,25.173C51.88,24.449 51.798,23.457 51.169,22.828ZM53.956,33.917C52.253,33.917 50.872,35.297 50.872,37C50.872,38.703 52.253,40.083 53.956,40.083C55.659,40.083 57.039,38.703 57.039,37C57.039,35.297 55.659,33.917 53.956,33.917ZM20.039,33.917C18.336,33.917 16.956,35.297 16.956,37C16.956,38.703 18.336,40.083 20.039,40.083C21.742,40.083 23.122,38.703 23.122,37C23.122,35.297 21.742,33.917 20.039,33.917ZM27.186,22.828C25.982,21.624 24.03,21.624 22.826,22.828C21.622,24.032 21.622,25.985 22.826,27.189C24.03,28.393 25.982,28.393 27.186,27.189C28.39,25.985 28.39,24.032 27.186,22.828ZM36.997,16.958C35.294,16.958 33.914,18.339 33.914,20.042C33.914,21.744 35.294,23.125 36.997,23.125C38.7,23.125 40.081,21.744 40.081,20.042C40.081,18.339 38.7,16.958 36.997,16.958Z"
+      android:fillColor="#1AA7EC"/>
+</vector>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="duplicate_files_count">
+        <item quantity="one">%1$d ไฟล์ซ้ำ</item>
+        <item quantity="other">%1$d ไฟล์ซ้ำ</item>
+    </plurals>
+    <plurals name="locked_apps_count">
+        <item quantity="one">%1$d แอปที่ล็อก</item>
+        <item quantity="other">%1$d แอปที่ล็อก</item>
+    </plurals>
+    <plurals name="launch_times_count">
+        <item quantity="one">%1$d ครั้ง</item>
+        <item quantity="other">%1$d ครั้ง</item>
+    </plurals>
+    <plurals name="notifications_blocked_count">
+        <item quantity="one">%1$d การแจ้งเตือนถูกบล็อก</item>
+        <item quantity="other">%1$d การแจ้งเตือนถูกบล็อก</item>
+    </plurals>
+    <plurals name="notifications_count">
+        <item quantity="one">การแจ้งเตือน</item>
+        <item quantity="other">การแจ้งเตือน</item>
+    </plurals>
+</resources>

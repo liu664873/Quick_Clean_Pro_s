@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="duplicate_files_count">
+        <item quantity="one">%1$d tệp trùng lặp</item>
+        <item quantity="other">%1$d tệp trùng lặp</item>
+    </plurals>
+    <plurals name="locked_apps_count">
+        <item quantity="one">%1$d ứng dụng bị khóa</item>
+        <item quantity="other">%1$d ứng dụng bị khóa</item>
+    </plurals>
+    <plurals name="launch_times_count">
+        <item quantity="one">%1$d lần</item>
+        <item quantity="other">%1$d lần</item>
+    </plurals>
+    <plurals name="notifications_blocked_count">
+        <item quantity="one">%1$d thông báo bị chặn</item>
+        <item quantity="other">%1$d thông báo bị chặn</item>
+    </plurals>
+    <plurals name="notifications_count">
+        <item quantity="one">thông báo</item>
+        <item quantity="other">thông báo</item>
+    </plurals>
+</resources>

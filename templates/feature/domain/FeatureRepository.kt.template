@@ -1,0 +1,5 @@
+package __PACKAGE__.feature.__FEATURE__.domain
+
+interface FeatureRepository {
+    suspend fun load()
+}

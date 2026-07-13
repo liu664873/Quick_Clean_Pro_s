@@ -1,0 +1,24 @@
+package __PACKAGE__.feature.__FEATURE__.presentation
+
+data class FeatureUiState(
+    val phase: FeaturePhase = FeaturePhase.Idle,
+    val errorMessage: String? = null,
+)
+
+enum class FeaturePhase {
+    Idle,
+    Loading,
+    Content,
+    Error,
+}
+
+sealed interface FeatureAction {
+    data object LoadRequested : FeatureAction
+    data object LoadSucceeded : FeatureAction
+    data class LoadFailed(val message: String) : FeatureAction
+    data object BackClicked : FeatureAction
+}
+
+sealed interface FeatureEffect {
+    data object NavigateBack : FeatureEffect
+}

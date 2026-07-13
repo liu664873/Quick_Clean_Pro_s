@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="duplicate_files_count">
+        <item quantity="one">%1$d개의 중복 파일</item>
+        <item quantity="other">%1$d개의 중복 파일</item>
+    </plurals>
+    <plurals name="locked_apps_count">
+        <item quantity="one">%1$d개의 잠긴 앱</item>
+        <item quantity="other">%1$d개의 잠긴 앱</item>
+    </plurals>
+    <plurals name="launch_times_count">
+        <item quantity="one">%1$d회</item>
+        <item quantity="other">%1$d회</item>
+    </plurals>
+    <plurals name="notifications_blocked_count">
+        <item quantity="one">%1$d개의 알림 차단됨</item>
+        <item quantity="other">%1$d개의 알림 차단됨</item>
+    </plurals>
+    <plurals name="notifications_count">
+        <item quantity="one">알림</item>
+        <item quantity="other">알림</item>
+    </plurals>
+</resources>

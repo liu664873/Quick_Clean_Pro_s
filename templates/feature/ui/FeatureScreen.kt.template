@@ -1,0 +1,13 @@
+package __PACKAGE__.feature.__FEATURE__.ui
+
+import androidx.compose.runtime.Composable
+import __PACKAGE__.feature.__FEATURE__.presentation.FeatureAction
+import __PACKAGE__.feature.__FEATURE__.presentation.FeatureUiState
+
+@Composable
+fun FeatureScreen(
+    state: FeatureUiState,
+    onAction: (FeatureAction) -> Unit,
+) {
+    // Build this feature's layout from state. Do not introduce a mandatory shared page shell.
+}

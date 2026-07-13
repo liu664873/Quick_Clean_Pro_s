@@ -1,0 +1,258 @@
+{
+    "limited":  500,
+    "limited_loadtime_seconds":  86400,
+    "ad_units":  [
+                     {
+                         "areakey":  "mainSettingNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainJunkCleanFinishNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainVirusAntiFinishNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainFileManageFinishNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainNotificationCleanFinishNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainWhatsappCleanFinishNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainNetworkSpeedFinishNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainHomeCleanerNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainHomeFileManagerNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainHomeToolboxNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainFileAccessDialogNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainQuitFunctionDialogNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainQuitAppDialogNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainDeleteDialogNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainAppUsageAccessDialogNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainLocationAccessDialogNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainJunkScanFinishNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainVirusScanFinishNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainNotificationScanFinishNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainWhatsappScanFinishNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainBatteryInfo1NativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainBatteryInfo2NativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainBatteryInfo3NativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainDeviceInfo1NativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainDeviceInfo2NativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainAppLockList1NativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainAppLockList2NativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     },
+                     {
+                         "areakey":  "mainAppLockNativeAdv",
+                         "rate":  1,
+                         "frequency_caps":  {
+                                                "max_per_hour":  50,
+                                                "max_per_day":  50,
+                                                "interval_seconds":  30
+                                            }
+                     }
+                 ]
+}

@@ -1,0 +1,24 @@
+package __PACKAGE__.feature.__FEATURE__.ui
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import __PACKAGE__.feature.__FEATURE__.presentation.FeatureViewModel
+import __PACKAGE__.feature.__FEATURE__.presentation.FeatureEffect
+
+@Composable
+fun FeatureRoute(
+    viewModel: FeatureViewModel,
+    onNavigateBack: () -> Unit,
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(viewModel) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                FeatureEffect.NavigateBack -> onNavigateBack()
+            }
+        }
+    }
+    FeatureScreen(state = state, onAction = viewModel::dispatch)
+}

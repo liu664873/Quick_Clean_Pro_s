@@ -1,0 +1,43 @@
+package __PACKAGE__.feature.__FEATURE__.presentation
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import __PACKAGE__.feature.__FEATURE__.domain.FeatureRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
+
+class FeatureViewModel(
+    private val repository: FeatureRepository,
+) : ViewModel() {
+    private val mutableUiState = MutableStateFlow(FeatureUiState())
+    val uiState: StateFlow<FeatureUiState> = mutableUiState.asStateFlow()
+    private val effectChannel = Channel<FeatureEffect>(Channel.BUFFERED)
+    val effects = effectChannel.receiveAsFlow()
+
+    fun dispatch(action: FeatureAction) {
+        mutableUiState.value = FeatureReducer.reduce(mutableUiState.value, action)
+        when (action) {
+            FeatureAction.LoadRequested -> load()
+            FeatureAction.BackClicked -> effectChannel.trySend(FeatureEffect.NavigateBack)
+            else -> Unit
+        }
+    }
+
+    private fun load() {
+        viewModelScope.launch {
+            try {
+                repository.load()
+                dispatch(FeatureAction.LoadSucceeded)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                dispatch(FeatureAction.LoadFailed(error.message.orEmpty()))
+            }
+        }
+    }
+}

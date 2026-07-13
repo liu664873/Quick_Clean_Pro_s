@@ -1,0 +1,59 @@
+{
+  "first_trigger_time": 600,
+  "scene": {
+    "delete_photos": {
+      "enabled": true,
+      "trigger_interval": 3600,
+      "messages": [
+        {
+          "title": "Photos cleaned",
+          "content": "Tap to review more photos.",
+          "route": "photos",
+          "keys": [
+            {
+              "language": "en",
+              "title": "Photos cleaned",
+              "content": "Tap to review more photos."
+            }
+          ]
+        }
+      ]
+    },
+    "delete_videos": {
+      "enabled": true,
+      "trigger_interval": 3600,
+      "messages": [
+        {
+          "title": "Videos cleaned",
+          "content": "Open Quick Clean PRO to review more videos.",
+          "route": "videos",
+          "keys": [
+            {
+              "language": "en",
+              "title": "Videos cleaned",
+              "content": "Open Quick Clean PRO to review more videos."
+            }
+          ]
+        }
+      ]
+    },
+    "delete_files": {
+      "enabled": true,
+      "trigger_interval": 3600,
+      "messages": [
+        {
+          "title": "Files cleaned",
+          "content": "Check what else can be cleaned.",
+          "route": "large_files",
+          "keys": [
+            {
+              "language": "en",
+              "title": "Files cleaned",
+              "content": "Check what else can be cleaned."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

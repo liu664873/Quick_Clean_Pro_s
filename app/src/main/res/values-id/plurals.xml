@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="duplicate_files_count">
+        <item quantity="one">%1$d file duplikat</item>
+        <item quantity="other">%1$d file duplikat</item>
+    </plurals>
+    <plurals name="locked_apps_count">
+        <item quantity="one">%1$d aplikasi terkunci</item>
+        <item quantity="other">%1$d aplikasi terkunci</item>
+    </plurals>
+    <plurals name="launch_times_count">
+        <item quantity="one">%1$d kali</item>
+        <item quantity="other">%1$d kali</item>
+    </plurals>
+    <plurals name="notifications_blocked_count">
+        <item quantity="one">%1$d notifikasi diblokir</item>
+        <item quantity="other">%1$d notifikasi diblokir</item>
+    </plurals>
+    <plurals name="notifications_count">
+        <item quantity="one">notifikasi</item>
+        <item quantity="other">notifikasi</item>
+    </plurals>
+</resources>

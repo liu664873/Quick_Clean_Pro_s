@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="duplicate_files_count">
+        <item quantity="one">%1$d 个重复文件</item>
+        <item quantity="other">%1$d 个重复文件</item>
+    </plurals>
+    <plurals name="locked_apps_count">
+        <item quantity="one">%1$d 个已锁应用</item>
+        <item quantity="other">%1$d 个已锁应用</item>
+    </plurals>
+    <plurals name="launch_times_count">
+        <item quantity="one">%1$d 次</item>
+        <item quantity="other">%1$d 次</item>
+    </plurals>
+    <plurals name="notifications_blocked_count">
+        <item quantity="one">%1$d 条通知已拦截</item>
+        <item quantity="other">%1$d 条通知已拦截</item>
+    </plurals>
+    <plurals name="notifications_count">
+        <item quantity="one">通知</item>
+        <item quantity="other">通知</item>
+    </plurals>
+</resources>

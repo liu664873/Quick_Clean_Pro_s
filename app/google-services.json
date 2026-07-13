@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "306607887185",
+    "project_id": "quick-clean-pro-phone-cleaner",
+    "storage_bucket": "quick-clean-pro-phone-cleaner.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:306607887185:android:e478bd67e0740427363970",
+        "android_client_info": {
+          "package_name": "com.quickcleanpro.phonecleaner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBGEEtKbfEQUy2amPXQfCTIG_zEt2FfDW8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
