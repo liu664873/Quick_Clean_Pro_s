@@ -1,75 +1,34 @@
 package com.quickcleanpro.phonecleaner.advertise
 
-import com.pdffox.adv.AdvertiseSdk
-import com.quickcleanpro.phonecleaner.use.core.ads.AppOpenAdSuppression
-import com.quickcleanpro.phonecleaner.use.core.ads.AppOpenSuppressionReason
-import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 
-class AppOpenAdSuppressionTest {
-    private var originalEnabled = true
-    private val releases = mutableListOf<() -> Unit>()
+class AdRuntimeExternalActivityTest {
+    @Test
+    fun cancellingExternalLaunchRestoresAppOpenState() {
+        val driver = FakeAdRuntimeDriver()
+        val runtime = fakeAdRuntime(driver)
 
-    @Before
-    fun rememberSdkState() {
-        originalEnabled = AdvertiseSdk.isAppOpenAdEnabled
-    }
+        runtime.markExternalActivityLaunch()
+        runtime.cancelExternalActivityLaunch()
 
-    @After
-    fun restoreSdkState() {
-        releases.asReversed().forEach { it() }
-        releases.clear()
-        AdvertiseSdk.isAppOpenAdEnabled = originalEnabled
+        assertTrue(driver.appOpenEnabledState)
+        assertFalse(driver.suppressNextAppOpen)
+        assertFalse(runtime.externalActivityReturning)
     }
 
     @Test
-    fun nestedLeasesKeepAppOpenAdSuppressedUntilLastRelease() {
-        AdvertiseSdk.isAppOpenAdEnabled = true
-        val firstRelease = acquire()
-        val secondRelease = acquire()
+    fun repeatedLaunchAndDisposeReleaseOnlyTheOwnedSuppression() {
+        val driver = FakeAdRuntimeDriver().apply { appOpenEnabledState = false }
+        val runtime = fakeAdRuntime(driver)
 
-        assertFalse(AdvertiseSdk.isAppOpenAdEnabled)
+        runtime.markExternalActivityLaunch()
+        runtime.markExternalActivityLaunch()
+        runtime.dispose()
+        runtime.dispose()
 
-        firstRelease()
-
-        assertFalse(AdvertiseSdk.isAppOpenAdEnabled)
-
-        secondRelease()
-
-        assertTrue(AdvertiseSdk.isAppOpenAdEnabled)
+        assertFalse(driver.appOpenEnabledState)
+        assertFalse(driver.suppressNextAppOpen)
     }
-
-    @Test
-    fun finalReleaseRestoresInitiallyDisabledState() {
-        AdvertiseSdk.isAppOpenAdEnabled = false
-        val firstRelease = acquire()
-        val secondRelease = acquire()
-
-        secondRelease()
-        firstRelease()
-
-        assertFalse(AdvertiseSdk.isAppOpenAdEnabled)
-    }
-
-    @Test
-    fun releasingSameLeaseTwiceDoesNotReleaseAnotherLease() {
-        AdvertiseSdk.isAppOpenAdEnabled = true
-        val firstRelease = acquire()
-        val secondRelease = acquire()
-
-        firstRelease()
-        firstRelease()
-
-        assertFalse(AdvertiseSdk.isAppOpenAdEnabled)
-
-        secondRelease()
-
-        assertTrue(AdvertiseSdk.isAppOpenAdEnabled)
-    }
-
-    private fun acquire(): () -> Unit =
-        AppOpenAdSuppression.acquire(AppOpenSuppressionReason.Test).also { releases += it }
 }

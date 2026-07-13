@@ -3,8 +3,8 @@ package com.quickcleanpro.phonecleaner.navigation
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
 import com.quickcleanpro.phonecleaner.app.navigation.AppNavigator
 import com.quickcleanpro.phonecleaner.app.navigation.FeatureEntryRouter
-import com.quickcleanpro.phonecleaner.use.core.ads.InterstitialAdInterceptor
-import com.quickcleanpro.phonecleaner.use.core.ads.AdScene
+import com.quickcleanpro.phonecleaner.common.ads.InterstitialAdRunner
+import com.quickcleanpro.phonecleaner.common.ads.AdScene
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -35,16 +35,16 @@ class FeatureEntryRouterTest {
         assertEquals(null, interceptor.targetRoute)
     }
 
-    private class DeferredInterceptor : InterstitialAdInterceptor {
+    private class DeferredInterceptor : InterstitialAdRunner {
         var targetRoute: String? = null
         var continueNavigation: (() -> Unit)? = null
 
-        override fun interceptRouteEntry(fromRoute: String?, targetRoute: String?, onContinue: () -> Unit) {
+        override fun runRouteEntry(fromRoute: String?, targetRoute: String?, onContinue: () -> Unit) {
             this.targetRoute = targetRoute
             continueNavigation = onContinue
         }
 
-        override fun interceptFeatureOperation(scene: AdScene?, requestId: String, onContinue: () -> Unit) = onContinue()
+        override fun run(scene: AdScene?, requestId: String, onContinue: () -> Unit) = onContinue()
     }
 
     private class RecordingNavigator : AppNavigator {

@@ -1,4 +1,6 @@
-package com.quickcleanpro.phonecleaner.use.feature.toolbox.presentation.common.device
+package com.quickcleanpro.phonecleaner.feature.toolbox.logic.deviceinfo
+
+import com.quickcleanpro.phonecleaner.feature.toolbox.logic.deviceinfo.*
 
 import androidx.lifecycle.ViewModel
 import org.junit.Assert.assertEquals

@@ -1,11 +1,11 @@
 package com.quickcleanpro.phonecleaner.app.navigation
 
-import com.quickcleanpro.phonecleaner.use.core.ads.InterstitialAdInterceptor
+import com.quickcleanpro.phonecleaner.common.ads.InterstitialAdRunner
 
 /** Applies the commercial entry policy before delegating stack mutation. */
 class FeatureEntryRouter(
     private val navigator: AppNavigator,
-    private val adInterceptor: InterstitialAdInterceptor,
+    private val interstitialAds: InterstitialAdRunner,
 ) : AppNavigator by navigator {
     override fun open(destination: AppDestination, args: Map<String, String>) {
         openAfterEntryAd(destination, destination.withArgs(args))
@@ -21,7 +21,7 @@ class FeatureEntryRouter(
     }
 
     private fun openAfterEntryAd(destination: AppDestination, finalRoute: String) {
-        adInterceptor.interceptRouteEntry(
+        interstitialAds.runRouteEntry(
             fromRoute = navigator.currentRoute,
             targetRoute = destination.route,
         ) {

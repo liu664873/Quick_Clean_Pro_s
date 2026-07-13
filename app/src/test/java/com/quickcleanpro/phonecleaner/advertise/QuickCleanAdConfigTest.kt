@@ -2,13 +2,13 @@ package com.quickcleanpro.phonecleaner.advertise
 
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
 
-import com.quickcleanpro.phonecleaner.use.core.ads.AdAreaKeys
-import com.quickcleanpro.phonecleaner.use.core.ads.AdNavigationPolicy
-import com.quickcleanpro.phonecleaner.use.core.ads.AdPlacementRegistry
-import com.quickcleanpro.phonecleaner.use.core.ads.AdScene
-import com.quickcleanpro.phonecleaner.use.core.common.operation.OperationAction
-import com.quickcleanpro.phonecleaner.use.core.feature.FeatureCatalog
-import com.quickcleanpro.phonecleaner.use.core.feature.FeatureKey
+import com.quickcleanpro.phonecleaner.common.ads.AdAreaKeys
+import com.quickcleanpro.phonecleaner.common.ads.AdNavigationPolicy
+import com.quickcleanpro.phonecleaner.common.ads.AdPlacementRegistry
+import com.quickcleanpro.phonecleaner.common.ads.AdScene
+import com.quickcleanpro.phonecleaner.common.operation.OperationAction
+import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureCatalog
+import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
 import java.io.File
 import java.lang.reflect.Modifier
 import org.junit.Assert.assertEquals

@@ -1,7 +1,7 @@
 package com.quickcleanpro.phonecleaner.notification
 
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
-import com.quickcleanpro.phonecleaner.use.app.runtime.notification.ToolNotificationIntentFactory
+import com.quickcleanpro.phonecleaner.app.runtime.notification.ToolNotificationIntentFactory
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

@@ -1,8 +1,8 @@
-package com.quickcleanpro.phonecleaner.use.app
+package com.quickcleanpro.phonecleaner.app
 
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
-import com.quickcleanpro.phonecleaner.use.core.startup.AppLaunchRequest
-import com.quickcleanpro.phonecleaner.use.core.startup.NotificationLaunchSource
+import com.quickcleanpro.phonecleaner.common.startup.AppLaunchRequest
+import com.quickcleanpro.phonecleaner.common.startup.NotificationLaunchSource
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test

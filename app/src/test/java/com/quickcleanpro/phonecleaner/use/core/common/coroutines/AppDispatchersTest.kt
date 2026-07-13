@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.use.core.common.coroutines
+package com.quickcleanpro.phonecleaner.common.coroutines
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.StandardTestDispatcher

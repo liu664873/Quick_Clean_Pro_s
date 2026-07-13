@@ -1,9 +1,9 @@
-package com.quickcleanpro.phonecleaner.use.skin.permission
+package com.quickcleanpro.phonecleaner.common.platform.permission
 
-import com.quickcleanpro.phonecleaner.app.permission.PermissionType
+import com.quickcleanpro.phonecleaner.common.platform.permission.core.PermissionType
 
-import com.quickcleanpro.phonecleaner.use.core.permission.PermissionRequestResult
-import com.quickcleanpro.phonecleaner.use.core.permission.PermissionStatus
+import com.quickcleanpro.phonecleaner.common.permission.PermissionRequestResult
+import com.quickcleanpro.phonecleaner.common.permission.PermissionStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

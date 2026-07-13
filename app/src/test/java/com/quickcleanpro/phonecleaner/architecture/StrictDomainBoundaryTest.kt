@@ -1,9 +1,9 @@
 package com.quickcleanpro.phonecleaner.architecture
 
-import com.quickcleanpro.phonecleaner.use.core.repository.NotificationRepository
-import com.quickcleanpro.phonecleaner.use.feature.applock.domain.AppLockRepository
-import com.quickcleanpro.phonecleaner.use.feature.toolbox.domain.AppUsageRepository
-import com.quickcleanpro.phonecleaner.use.feature.toolbox.domain.NetworkRepository
+import com.quickcleanpro.phonecleaner.feature.notificationcleaner.logic.NotificationRepository
+import com.quickcleanpro.phonecleaner.feature.applock.logic.AppLockRepository
+import com.quickcleanpro.phonecleaner.feature.toolbox.logic.AppUsageRepository
+import com.quickcleanpro.phonecleaner.feature.toolbox.logic.NetworkRepository
 import org.junit.Assert.assertTrue
 import org.junit.Test
 

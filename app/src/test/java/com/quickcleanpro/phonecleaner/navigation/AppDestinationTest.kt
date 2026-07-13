@@ -1,8 +1,8 @@
 package com.quickcleanpro.phonecleaner.navigation
 
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
-import com.quickcleanpro.phonecleaner.use.core.feature.FeatureCatalog
-import com.quickcleanpro.phonecleaner.use.core.feature.FeatureKey
+import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureCatalog
+import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue

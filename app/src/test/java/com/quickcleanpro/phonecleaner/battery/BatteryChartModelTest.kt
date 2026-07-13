@@ -1,10 +1,10 @@
 package com.quickcleanpro.phonecleaner.battery
 
-import com.quickcleanpro.phonecleaner.use.feature.toolbox.battery.presentation.batteryCurrentAxisBounds
-import com.quickcleanpro.phonecleaner.use.feature.toolbox.battery.presentation.batteryCurrentChartPoints
-import com.quickcleanpro.phonecleaner.use.feature.toolbox.battery.presentation.downsampleBatteryChartPoints
-import com.quickcleanpro.phonecleaner.use.feature.toolbox.presentation.common.device.BatteryCurrentRange
-import com.quickcleanpro.phonecleaner.use.feature.toolbox.presentation.common.device.BatteryCurrentSample
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.batteryCurrentAxisBounds
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.batteryCurrentChartPoints
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.downsampleBatteryChartPoints
+import com.quickcleanpro.phonecleaner.feature.toolbox.logic.deviceinfo.BatteryCurrentRange
+import com.quickcleanpro.phonecleaner.feature.toolbox.logic.deviceinfo.BatteryCurrentSample
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -27,7 +27,7 @@ class BatteryChartModelTest {
     @Test
     fun downsamplingKeepsFirstAndLastPoint() {
         val points = (0 until 10).map { index ->
-            com.quickcleanpro.phonecleaner.use.feature.toolbox.battery.presentation.BatteryChartPoint(
+            com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.BatteryChartPoint(
                 timestampMillis = index.toLong(),
                 value = index.toFloat(),
             )

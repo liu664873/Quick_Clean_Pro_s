@@ -44,10 +44,10 @@
         android:localeConfig="@xml/locales_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:name="com.quickcleanpro.phonecleaner.use.app.MyApp"
+        android:name="com.quickcleanpro.phonecleaner.app.MyApp"
         android:theme="@style/Theme.QuickCleanPRO">
         <activity
-            android:name="com.quickcleanpro.phonecleaner.use.app.MainActivity"
+            android:name="com.quickcleanpro.phonecleaner.app.MainActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true"
             android:launchMode="singleTop"
@@ -59,7 +59,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name="com.quickcleanpro.phonecleaner.use.feature.notification.data.QuickCleanPRONotificationListener"
+            android:name="com.quickcleanpro.phonecleaner.feature.notificationcleaner.logic.QuickCleanPRONotificationListener"
             android:exported="true"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
@@ -68,7 +68,7 @@
             </intent-filter>
         </service>
         <service
-            android:name="com.quickcleanpro.phonecleaner.use.app.runtime.notification.PersistentNotificationService"
+            android:name="com.quickcleanpro.phonecleaner.app.runtime.notification.PersistentNotificationService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse">
@@ -77,7 +77,7 @@
                 android:value="Keeps Quick Clean PRO tools available in notifications, samples local battery history for Battery Info charts, and monitors user-selected protected apps for App Lock." />
         </service>
         <service
-            android:name="com.quickcleanpro.phonecleaner.use.feature.applock.data.service.LockScreenOverlayService"
+            android:name="com.quickcleanpro.phonecleaner.feature.applock.logic.service.LockScreenOverlayService"
             android:enabled="true"
             android:exported="false" />
         <meta-data

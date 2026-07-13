@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.app.permission
+package com.quickcleanpro.phonecleaner.common.platform.permission.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

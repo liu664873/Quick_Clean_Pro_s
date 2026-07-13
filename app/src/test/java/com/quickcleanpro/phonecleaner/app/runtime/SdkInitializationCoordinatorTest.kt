@@ -1,7 +1,7 @@
 package com.quickcleanpro.phonecleaner.app.runtime
 
-import com.quickcleanpro.phonecleaner.use.app.runtime.InitializationStatus
-import com.quickcleanpro.phonecleaner.use.app.runtime.SdkInitializationCoordinator
+import com.quickcleanpro.phonecleaner.app.runtime.InitializationStatus
+import com.quickcleanpro.phonecleaner.app.runtime.SdkInitializationCoordinator
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest

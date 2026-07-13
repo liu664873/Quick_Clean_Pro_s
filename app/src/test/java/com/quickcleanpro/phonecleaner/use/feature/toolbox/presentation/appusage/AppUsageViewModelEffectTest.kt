@@ -1,7 +1,8 @@
-package com.quickcleanpro.phonecleaner.use.feature.toolbox.presentation.appusage
+package com.quickcleanpro.phonecleaner.feature.toolbox.logic.appusage
 
-import com.quickcleanpro.phonecleaner.use.core.model.toolbox.AppUsageInfo
-import com.quickcleanpro.phonecleaner.use.feature.toolbox.domain.AppUsageRepository
+
+import com.quickcleanpro.phonecleaner.feature.toolbox.logic.model.AppUsageInfo
+import com.quickcleanpro.phonecleaner.feature.toolbox.logic.AppUsageRepository
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first

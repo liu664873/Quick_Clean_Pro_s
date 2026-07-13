@@ -2,8 +2,8 @@ package com.quickcleanpro.phonecleaner.advertise
 
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
 
-import com.quickcleanpro.phonecleaner.use.core.ads.AdNavigationPolicy
-import com.quickcleanpro.phonecleaner.use.core.feature.FeatureKey
+import com.quickcleanpro.phonecleaner.common.ads.AdNavigationPolicy
+import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.use.feature.files.domain.model
+package com.quickcleanpro.phonecleaner.feature.files.logic
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

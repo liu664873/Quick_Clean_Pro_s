@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.use.core.startup
+package com.quickcleanpro.phonecleaner.common.startup
 
 import android.content.Intent
 import org.junit.Assert.assertEquals

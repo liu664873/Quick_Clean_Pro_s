@@ -1,7 +1,7 @@
 package com.quickcleanpro.phonecleaner.analytics
 
-import com.quickcleanpro.phonecleaner.core.monetization.analytics.AnalyticsDispatcher
-import com.quickcleanpro.phonecleaner.core.monetization.analytics.AnalyticsSink
+import com.quickcleanpro.phonecleaner.common.analytics.AnalyticsDispatcher
+import com.quickcleanpro.phonecleaner.common.analytics.AnalyticsSink
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

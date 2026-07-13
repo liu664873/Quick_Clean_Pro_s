@@ -1,7 +1,7 @@
 package com.quickcleanpro.phonecleaner.app.navigation
 
-import com.quickcleanpro.phonecleaner.use.core.feature.FeatureGroup
-import com.quickcleanpro.phonecleaner.use.core.feature.FeatureKey
+import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureGroup
+import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
 import java.net.URLEncoder
 
 const val DETAIL_INITIAL_INDEX_ARG = "initialIndex"
