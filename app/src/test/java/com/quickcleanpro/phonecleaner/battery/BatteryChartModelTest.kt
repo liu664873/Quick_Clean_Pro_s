@@ -3,8 +3,8 @@ package com.quickcleanpro.phonecleaner.battery
 import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.batteryCurrentAxisBounds
 import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.batteryCurrentChartPoints
 import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.downsampleBatteryChartPoints
-import com.quickcleanpro.phonecleaner.feature.toolbox.logic.deviceinfo.BatteryCurrentRange
-import com.quickcleanpro.phonecleaner.feature.toolbox.logic.deviceinfo.BatteryCurrentSample
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.BatteryCurrentRange
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.BatteryCurrentSample
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

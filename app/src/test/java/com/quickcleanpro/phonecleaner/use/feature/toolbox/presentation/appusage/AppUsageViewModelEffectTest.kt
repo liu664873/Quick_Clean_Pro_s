@@ -1,8 +1,8 @@
-package com.quickcleanpro.phonecleaner.feature.toolbox.logic.appusage
+package com.quickcleanpro.phonecleaner.feature.toolbox.appusage
 
 
-import com.quickcleanpro.phonecleaner.feature.toolbox.logic.model.AppUsageInfo
-import com.quickcleanpro.phonecleaner.feature.toolbox.logic.AppUsageRepository
+import com.quickcleanpro.phonecleaner.feature.toolbox.appusage.AppUsageInfo
+import com.quickcleanpro.phonecleaner.feature.toolbox.appusage.data.AppUsageRepository
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -16,19 +16,23 @@ class AppUsageViewModelEffectTest {
         val viewModel = AppUsageViewModel(repository = NoAccessRepository())
         val effect = async(start = CoroutineStart.UNDISPATCHED) { viewModel.effects.first() }
 
-        viewModel.openAppInfo("com.example.target")
+        viewModel.onAction(AppUsageAction.StopApp("com.example.target"))
 
         assertEquals(AppUsageEffect.OpenAppInfo("com.example.target"), effect.await())
     }
 
     @Test
-    fun `open usage settings emits platform independent effect`() = runTest {
+    fun `permission rejection exits through domain effect`() = runTest {
         val viewModel = AppUsageViewModel(repository = NoAccessRepository())
         val effect = async(start = CoroutineStart.UNDISPATCHED) { viewModel.effects.first() }
 
-        viewModel.openUsageSettings()
+        viewModel.onAction(AppUsageAction.PermissionRequestConsumed)
+        viewModel.onAction(AppUsageAction.PermissionRejected)
 
-        assertEquals(AppUsageEffect.OpenUsageSettings, effect.await())
+        assertEquals(
+            AppUsageEffect.Exit(AppUsageExitReason.PermissionRejected),
+            effect.await(),
+        )
     }
 
     private class NoAccessRepository : AppUsageRepository {

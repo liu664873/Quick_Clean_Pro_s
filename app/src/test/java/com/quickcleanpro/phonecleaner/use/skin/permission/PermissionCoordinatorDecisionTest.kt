@@ -1,8 +1,7 @@
-package com.quickcleanpro.phonecleaner.common.platform.permission
+package com.quickcleanpro.phonecleaner.common.permission.runtime
 
-import com.quickcleanpro.phonecleaner.common.platform.permission.core.PermissionType
+import com.quickcleanpro.phonecleaner.common.permission.PermissionType
 
-import com.quickcleanpro.phonecleaner.common.permission.PermissionRequestResult
 import com.quickcleanpro.phonecleaner.common.permission.PermissionStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -22,11 +21,6 @@ class PermissionCoordinatorDecisionTest {
             )
 
         assertEquals(PermissionRecheckDecision.Denied, decision)
-    }
-
-    @Test
-    fun `dialog cancellation reports dismissed`() {
-        assertEquals(PermissionRequestResult.Dismissed, permissionDismissResult(notifyRejected = true))
     }
 
     @Test

@@ -1,12 +1,12 @@
 package com.quickcleanpro.phonecleaner.feature.junkclean.ui
 
-import com.quickcleanpro.phonecleaner.feature.junkclean.logic.*
+import com.quickcleanpro.phonecleaner.feature.junkclean.*
 
 import com.quickcleanpro.phonecleaner.R
-import com.quickcleanpro.phonecleaner.feature.junkclean.logic.model.JunkCategory
-import com.quickcleanpro.phonecleaner.feature.junkclean.logic.model.JunkFile
-import com.quickcleanpro.phonecleaner.feature.junkclean.logic.model.ScanResult
-import com.quickcleanpro.phonecleaner.feature.junkclean.logic.CleanupSummary
+import com.quickcleanpro.phonecleaner.feature.junkclean.model.JunkCategory
+import com.quickcleanpro.phonecleaner.feature.junkclean.model.JunkFile
+import com.quickcleanpro.phonecleaner.feature.junkclean.model.ScanResult
+import com.quickcleanpro.phonecleaner.feature.junkclean.CleanupSummary
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

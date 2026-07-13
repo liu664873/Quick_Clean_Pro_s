@@ -1,0 +1,725 @@
+package com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui
+
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.*
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.BatteryInfoAction
+
+import android.graphics.Paint
+import android.graphics.Typeface
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.quickcleanpro.phonecleaner.R
+import com.quickcleanpro.phonecleaner.common.ui.components.CleanXScaffoldPage
+import com.quickcleanpro.phonecleaner.common.ui.components.stableNavigationBarsPadding
+import com.quickcleanpro.phonecleaner.common.ui.components.popups.StopScanDialog
+import com.quickcleanpro.phonecleaner.common.ui.theme.CleanXBackground
+import com.quickcleanpro.phonecleaner.common.ui.theme.CleanXBlue
+import com.quickcleanpro.phonecleaner.common.ui.theme.CleanXMutedText
+import com.quickcleanpro.phonecleaner.common.ui.theme.CleanXText
+import com.quickcleanpro.phonecleaner.feature.toolbox.shared.ui.ToolboxScanningContent
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.BatteryCurrentRange
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.BatteryCurrentSample
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.DeviceInfoUiState
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.displayBatteryTemperatureValue
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.formatBatteryCurrent
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.formatBatteryTemperature
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.formatBatteryVoltage
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.BatteryChartAxisBounds
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.BatteryChartPoint
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.batteryCurrentAxisBounds
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.batteryCurrentChartMaxPoints
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.batteryCurrentChartPoints
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.batteryCurrentChartWindowEndMillis
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.batteryCurrentAxisLabels
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.batteryOneMinuteWindowEnd
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.batteryTemperatureAxisBounds
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.ui.downsampleBatteryChartPoints
+import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.max
+
+private val ChartGrid = Color(0xFF9AA6B8).copy(alpha = 0.72f)
+private val ChartFill = Color(0xFF5666F5).copy(alpha = 0.14f)
+private val TabBackground = Color(0xFFE7E9F1)
+
+@Composable
+fun BatteryInfoScreen(
+    state: DeviceInfoUiState,
+    onAction: (BatteryInfoAction) -> Unit,
+) {
+    CleanXScaffoldPage(
+        title = stringResource(R.string.battery_info),
+        backgroundBrush =
+            Brush.linearGradient(
+                colors = listOf(CleanXBackground, CleanXBackground),
+            ),
+        onBack = { onAction(BatteryInfoAction.Back) },
+        contentPadding = if (state.isScanning) PaddingValues(0.dp) else PaddingValues(horizontal = 16.dp),
+        scrollEnabled = !state.isScanning,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+    ) {
+        if (state.isScanning) {
+            ToolboxScanningContent(
+                centerIconRes = R.drawable.ic_scan_battery_info,
+                captionText = stringResource(R.string.battery_info),
+            )
+        } else {
+            BatteryTopCard(
+                statusText = localizedBatteryStatus(state.batteryStatus.statusText),
+                capacityText = state.batteryCapacityText,
+            )
+            BatteryMetricGrid(state)
+            BatteryTemperatureCard(state)
+            BatteryElectricCurrentCard(
+                uiState = state,
+                onRangeSelected = { onAction(BatteryInfoAction.RangeSelected(it)) },
+            )
+            Spacer(modifier = Modifier.stableNavigationBarsPadding().height(24.dp))
+        }
+    }
+
+    if (state.showStopDialog) {
+        StopScanDialog(
+            onQuit = { onAction(BatteryInfoAction.QuitScan) },
+            onResume = { onAction(BatteryInfoAction.ResumeScan) },
+        )
+    }
+}
+
+@Composable
+private fun BatteryMetricGrid(uiState: DeviceInfoUiState) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            BatteryMetricCard(
+                iconRes = R.drawable.temperature,
+                value = formatBatteryTemperature(uiState.displayTemperatureC, uiState.temperatureUnit),
+                label = stringResource(R.string.battery_temperature),
+                modifier = Modifier.weight(1f),
+            )
+            BatteryMetricCard(
+                iconRes = R.drawable.voltage,
+                value = formatBatteryVoltage(uiState.battery.voltage),
+                label = stringResource(R.string.battery_voltage),
+                modifier = Modifier.weight(1f),
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            BatteryMetricCard(
+                iconRes = R.drawable.battery_health,
+                value = localizedBatteryHealth(uiState.battery.health),
+                label = stringResource(R.string.battery_health),
+                modifier = Modifier.weight(1f),
+            )
+            BatteryMetricCard(
+                iconRes = R.drawable.life,
+                value = uiState.batteryLifeText,
+                label = stringResource(R.string.battery_life),
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+private fun BatteryTopCard(
+    statusText: String,
+    capacityText: String,
+) {
+    Surface(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(134.dp),
+        color = Color.White,
+        shape = RoundedCornerShape(14.dp),
+    ) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(start = 22.dp, end = 18.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                BatterySummaryLine(
+                    label = stringResource(R.string.battery_status),
+                    value = statusText,
+                )
+                BatterySummaryLine(
+                    label = stringResource(R.string.battery_capacity),
+                    value = capacityText,
+                )
+            }
+            Image(
+                painter = painterResource(id = R.drawable.battery_info),
+                contentDescription = null,
+                modifier = Modifier.size(width = 104.dp, height = 78.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun BatterySummaryLine(
+    label: String,
+    value: String,
+) {
+    Column {
+        Text(
+            text = label,
+            color = CleanXMutedText,
+            fontSize = 14.sp,
+            lineHeight = 18.sp,
+        )
+        Text(
+            text = value,
+            color = CleanXText,
+            fontSize = 20.sp,
+            lineHeight = 26.sp,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+@Composable
+private fun BatteryMetricCard(
+    iconRes: Int,
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.height(144.dp),
+        color = Color.White,
+        shape = RoundedCornerShape(14.dp),
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Image(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                modifier = Modifier.size(48.dp),
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = value,
+                color = CleanXText,
+                fontSize = 20.sp,
+                lineHeight = 24.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = label,
+                color = CleanXMutedText,
+                fontSize = 13.sp,
+                lineHeight = 17.sp,
+                maxLines = 1,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun BatteryTemperatureCard(uiState: DeviceInfoUiState) {
+    BatteryChartCard(
+        title = stringResource(R.string.battery_temperature_title),
+        rows =
+            listOf(
+                stringResource(R.string.battery_realtime_temperature) to
+                    formatBatteryTemperature(uiState.displayTemperatureC, uiState.temperatureUnit, includeSpace = false),
+                stringResource(R.string.battery_average_temperature) to
+                    formatBatteryTemperature(uiState.selectedTemperatureAverageC, uiState.temperatureUnit, includeSpace = false),
+            ),
+    ) {
+        val chartPoints =
+            uiState.selectedTemperatureSamples.map {
+                ChartPoint(
+                    timestampMillis = it.timestampMillis,
+                    value = displayBatteryTemperatureValue(it.temperatureC, uiState.temperatureUnit),
+                )
+            }
+        BatteryLineChart(
+            points = chartPoints,
+            windowEndMillis = oneMinuteChartWindowEnd(chartPoints, uiState.latestSampleTimestampMillis),
+            windowMillis = TEMPERATURE_CHART_WINDOW_MILLIS,
+            xLabels = secondsAxisLabels(),
+            axisBounds = temperatureAxisBounds(uiState.temperatureUnit),
+            valueLabelFormatter = { String.format(Locale.US, "%.1f\u00B0%s", it, uiState.temperatureUnit) },
+        )
+    }
+}
+
+@Composable
+private fun BatteryElectricCurrentCard(
+    uiState: DeviceInfoUiState,
+    onRangeSelected: (BatteryCurrentRange) -> Unit,
+) {
+    BatteryChartCard(
+        title = stringResource(R.string.battery_electric_current),
+        rows =
+            listOf(
+                stringResource(R.string.battery_realtime_current) to formatBatteryCurrent(uiState.displayCurrentNow),
+                stringResource(R.string.battery_average_current) to formatBatteryCurrent(uiState.selectedCurrentAverage),
+            ),
+    ) {
+        BatteryCurrentChart(
+            samples = uiState.selectedCurrentSamples,
+            selectedRange = uiState.selectedCurrentRange,
+            latestSampleTimestampMillis = uiState.latestSampleTimestampMillis,
+        )
+        Spacer(modifier = Modifier.height(14.dp))
+        BatteryTimeTabs(
+            selectedRange = uiState.selectedCurrentRange,
+            onRangeSelected = onRangeSelected,
+        )
+    }
+}
+
+@Composable
+private fun BatteryChartCard(
+    title: String,
+    rows: List<Pair<String, String>>,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color.White,
+        shape = RoundedCornerShape(14.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 18.dp),
+        ) {
+            SectionTitle(title)
+            Spacer(modifier = Modifier.height(16.dp))
+            rows.forEachIndexed { index, (label, value) ->
+                InfoRow(label, value)
+                if (index != rows.lastIndex) {
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            content()
+        }
+    }
+}
+
+@Composable
+private fun BatteryCurrentChart(
+    samples: List<BatteryCurrentSample>,
+    selectedRange: BatteryCurrentRange,
+    latestSampleTimestampMillis: Long,
+) {
+    val windowEndMillis =
+        currentChartWindowEndMillis(
+            samples = samples,
+            selectedRange = selectedRange,
+            latestSampleTimestampMillis = latestSampleTimestampMillis,
+        )
+    val chartPoints =
+        currentChartPoints(
+            samples = samples,
+            selectedRange = selectedRange,
+            windowEndMillis = windowEndMillis,
+        )
+    BatteryLineChart(
+        points = chartPoints,
+        windowEndMillis = windowEndMillis,
+        windowMillis = selectedRange.durationMillis,
+        xLabels = currentAxisLabels(selectedRange),
+        axisBounds = currentAxisBounds(chartPoints.map { it.value }),
+        valueLabelFormatter = { String.format(Locale.US, "%.2f mA", it) },
+        maxPoints = currentChartMaxPoints(selectedRange),
+    )
+}
+
+@Composable
+private fun BatteryTimeTabs(
+    selectedRange: BatteryCurrentRange,
+    onRangeSelected: (BatteryCurrentRange) -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(38.dp)
+                .clip(RoundedCornerShape(50))
+                .background(TabBackground),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BatteryCurrentRange.entries.forEach { range ->
+            val selected = range == selectedRange
+            Box(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(50))
+                        .background(if (selected) CleanXBlue else Color.Transparent)
+                        .clickable { onRangeSelected(range) },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(range.labelRes),
+                    color = if (selected) Color.White else CleanXMutedText,
+                    fontSize = 14.sp,
+                    lineHeight = 18.sp,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BatteryLineChart(
+    points: List<ChartPoint>,
+    windowEndMillis: Long,
+    windowMillis: Long,
+    xLabels: List<String>,
+    axisBounds: ChartAxisBounds,
+    valueLabelFormatter: (Float) -> String,
+    maxPoints: Int? = null,
+) {
+    val chartPrimary = CleanXBlue
+
+    Canvas(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(154.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFFF9FAFE)),
+    ) {
+        val chartLeft = 28.dp.toPx()
+        val chartRight = size.width - 52.dp.toPx()
+        val chartTop = 16.dp.toPx()
+        val chartBottom = size.height - 24.dp.toPx()
+        val dash = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx()), 0f)
+        val textPaint = chartTextPaint(ChartGrid, 9.dp.toPx())
+        val valuePaint = chartTextPaint(chartPrimary, 9.dp.toPx(), Typeface.DEFAULT_BOLD)
+
+        repeat(6) { index ->
+            val fraction = index / 5f
+            val y = chartTop + (chartBottom - chartTop) * fraction
+            drawLine(
+                color = ChartGrid,
+                start = Offset(chartLeft, y),
+                end = Offset(chartRight, y),
+                strokeWidth = 1.dp.toPx(),
+                pathEffect = dash,
+            )
+            drawContext.canvas.nativeCanvas.drawText(
+                axisBounds.yLabels.getOrNull(index).orEmpty(),
+                chartRight + 8.dp.toPx(),
+                y + 3.dp.toPx(),
+                textPaint,
+            )
+        }
+
+        xLabels.forEachIndexed { index, label ->
+            val x =
+                if (xLabels.size == 1) {
+                    chartRight
+                } else {
+                    chartLeft + (chartRight - chartLeft) * index / (xLabels.size - 1).toFloat()
+                }
+            drawLine(
+                color = ChartGrid,
+                start = Offset(x, chartTop),
+                end = Offset(x, chartBottom),
+                strokeWidth = 1.dp.toPx(),
+                pathEffect = dash,
+            )
+            textPaint.textAlign = Paint.Align.CENTER
+            drawContext.canvas.nativeCanvas.drawText(label, x, chartBottom + 14.dp.toPx(), textPaint)
+            textPaint.textAlign = Paint.Align.LEFT
+        }
+
+        if (windowEndMillis <= 0L) return@Canvas
+        val visiblePoints =
+            points
+                .asSequence()
+                .filter { it.timestampMillis >= windowEndMillis - windowMillis }
+                .filter { it.timestampMillis <= windowEndMillis }
+                .sortedBy { it.timestampMillis }
+                .toList()
+        if (visiblePoints.isEmpty()) return@Canvas
+
+        val widthBasedMaxVisiblePoints = max(2, ((chartRight - chartLeft) / 4.dp.toPx()).toInt())
+        val maxVisiblePoints = maxPoints?.coerceAtLeast(2) ?: widthBasedMaxVisiblePoints
+        val drawablePoints = downsampleChartPoints(visiblePoints, maxVisiblePoints)
+        val offsets =
+            drawablePoints.map {
+                it.toOffset(
+                    windowEndMillis = windowEndMillis,
+                    windowMillis = windowMillis,
+                    axisBounds = axisBounds,
+                    chartLeft = chartLeft,
+                    chartRight = chartRight,
+                    chartTop = chartTop,
+                    chartBottom = chartBottom,
+                )
+            }
+
+        if (offsets.size == 1) {
+            drawCircle(
+                color = chartPrimary,
+                radius = 3.dp.toPx(),
+                center = offsets.first(),
+            )
+        } else {
+            val fillPath =
+                Path().apply {
+                    moveTo(offsets.first().x, chartBottom)
+                    offsets.forEach { lineTo(it.x, it.y) }
+                    lineTo(offsets.last().x, chartBottom)
+                    close()
+                }
+            drawPath(fillPath, color = ChartFill)
+            offsets.zipWithNext().forEach { (start, end) ->
+                drawLine(
+                    color = chartPrimary,
+                    start = start,
+                    end = end,
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round,
+                )
+            }
+        }
+
+        val minPoint = visiblePoints.minByOrNull { it.value }
+        val maxPoint = visiblePoints.maxByOrNull { it.value }
+        maxPoint?.let { point ->
+            drawChartValueLabel(
+                label = valueLabelFormatter(point.value),
+                anchor =
+                    point.toOffset(
+                        windowEndMillis,
+                        windowMillis,
+                        axisBounds,
+                        chartLeft,
+                        chartRight,
+                        chartTop,
+                        chartBottom,
+                    ),
+                paint = valuePaint,
+                chartLeft = chartLeft,
+                chartRight = chartRight,
+                above = true,
+            )
+        }
+        if (minPoint != null && minPoint != maxPoint) {
+            drawChartValueLabel(
+                label = valueLabelFormatter(minPoint.value),
+                anchor =
+                    minPoint.toOffset(
+                        windowEndMillis,
+                        windowMillis,
+                        axisBounds,
+                        chartLeft,
+                        chartRight,
+                        chartTop,
+                        chartBottom,
+                    ),
+                paint = valuePaint,
+                chartLeft = chartLeft,
+                chartRight = chartRight,
+                above = false,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        color = CleanXText,
+        fontSize = 16.sp,
+        lineHeight = 20.sp,
+        fontWeight = FontWeight.Bold,
+    )
+}
+
+@Composable
+private fun InfoRow(
+    label: String,
+    value: String,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            color = CleanXMutedText,
+            fontSize = 16.sp,
+            lineHeight = 20.sp,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = value,
+            color = CleanXText,
+            fontSize = 16.sp,
+            lineHeight = 20.sp,
+            textAlign = TextAlign.End,
+        )
+    }
+}
+
+private typealias ChartPoint = BatteryChartPoint
+private typealias ChartAxisBounds = BatteryChartAxisBounds
+
+private fun secondsAxisLabels(): List<String> = batteryCurrentAxisLabels(BatteryCurrentRange.OneMinute)
+
+private fun currentAxisLabels(range: BatteryCurrentRange): List<String> = batteryCurrentAxisLabels(range)
+
+private fun currentChartMaxPoints(range: BatteryCurrentRange): Int? = batteryCurrentChartMaxPoints(range)
+
+private fun currentChartPoints(
+    samples: List<BatteryCurrentSample>,
+    selectedRange: BatteryCurrentRange,
+    windowEndMillis: Long,
+): List<ChartPoint> = batteryCurrentChartPoints(samples, selectedRange, windowEndMillis)
+
+private fun currentChartWindowEndMillis(
+    samples: List<BatteryCurrentSample>,
+    selectedRange: BatteryCurrentRange,
+    latestSampleTimestampMillis: Long,
+): Long = batteryCurrentChartWindowEndMillis(samples, selectedRange, latestSampleTimestampMillis)
+
+private fun oneMinuteChartWindowEnd(
+    points: List<ChartPoint>,
+    latestSampleTimestampMillis: Long,
+): Long = batteryOneMinuteWindowEnd(points, latestSampleTimestampMillis)
+
+private fun temperatureAxisBounds(unit: String): ChartAxisBounds = batteryTemperatureAxisBounds(unit)
+
+private fun currentAxisBounds(values: List<Float>): ChartAxisBounds = batteryCurrentAxisBounds(values)
+
+private fun ChartPoint.toOffset(
+    windowEndMillis: Long,
+    windowMillis: Long,
+    axisBounds: ChartAxisBounds,
+    chartLeft: Float,
+    chartRight: Float,
+    chartTop: Float,
+    chartBottom: Float,
+): Offset {
+    val elapsed = (windowEndMillis - timestampMillis).coerceIn(0L, windowMillis)
+    val xFraction = 1f - elapsed / windowMillis.toFloat()
+    val yFraction = ((value - axisBounds.min) / axisBounds.range).coerceIn(0f, 1f)
+    return Offset(
+        x = chartLeft + (chartRight - chartLeft) * xFraction,
+        y = chartBottom - (chartBottom - chartTop) * yFraction,
+    )
+}
+
+private fun downsampleChartPoints(
+    points: List<ChartPoint>,
+    maxPoints: Int,
+): List<ChartPoint> = downsampleBatteryChartPoints(points, maxPoints)
+
+private fun chartTextPaint(
+    color: Color,
+    textSizePx: Float,
+    typeface: Typeface = Typeface.DEFAULT,
+): Paint =
+    Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        this.color = color.toArgb()
+        textSize = textSizePx
+        this.typeface = typeface
+        textAlign = Paint.Align.LEFT
+    }
+
+private fun DrawScope.drawChartValueLabel(
+    label: String,
+    anchor: Offset,
+    paint: Paint,
+    chartLeft: Float,
+    chartRight: Float,
+    above: Boolean,
+) {
+    val labelWidth = paint.measureText(label)
+    val x = (anchor.x + 4.dp.toPx()).coerceIn(chartLeft, chartRight - labelWidth)
+    val yOffset = if (above) -5.dp.toPx() else 12.dp.toPx()
+    val y = (anchor.y + yOffset).coerceIn(11.dp.toPx(), size.height - 8.dp.toPx())
+    drawContext.canvas.nativeCanvas.drawText(label, x, y, paint)
+}
+
+@Composable
+private fun localizedBatteryHealth(health: String): String =
+    when (health) {
+        "Good" -> stringResource(R.string.battery_health_good)
+        "Cold" -> stringResource(R.string.battery_health_cold)
+        "Dead" -> stringResource(R.string.battery_health_dead)
+        "Overheat" -> stringResource(R.string.battery_health_overheat)
+        "Overvoltage" -> stringResource(R.string.battery_health_overvoltage)
+        "Failure" -> stringResource(R.string.battery_health_failure)
+        else -> stringResource(R.string.device_unknown)
+    }
+
+@Composable
+private fun localizedBatteryStatus(status: String): String =
+    when (status) {
+        "Charging" -> stringResource(R.string.battery_charging)
+        "Discharging" -> stringResource(R.string.battery_discharging)
+        "Full" -> stringResource(R.string.battery_full)
+        "Not Charging" -> stringResource(R.string.battery_not_charging)
+        else -> stringResource(R.string.device_unknown)
+    }
+
+private const val TEMPERATURE_CHART_WINDOW_MILLIS = 60_000L

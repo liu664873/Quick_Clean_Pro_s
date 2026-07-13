@@ -1,6 +1,7 @@
-package com.quickcleanpro.phonecleaner.feature.toolbox.logic.deviceinfo
+package com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo
 
-import com.quickcleanpro.phonecleaner.feature.toolbox.logic.deviceinfo.*
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.*
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.BatteryInfoViewModel
 
 import androidx.lifecycle.ViewModel
 import org.junit.Assert.assertEquals

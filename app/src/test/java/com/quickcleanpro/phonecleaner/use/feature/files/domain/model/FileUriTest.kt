@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.feature.files.logic
+package com.quickcleanpro.phonecleaner.feature.files.shared
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

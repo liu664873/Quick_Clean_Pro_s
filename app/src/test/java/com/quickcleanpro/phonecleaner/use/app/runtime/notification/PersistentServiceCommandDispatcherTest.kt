@@ -1,10 +1,10 @@
 package com.quickcleanpro.phonecleaner.app.runtime.notification
 
-import com.quickcleanpro.phonecleaner.feature.toolbox.logic.model.BatteryHistorySample
-import com.quickcleanpro.phonecleaner.feature.applock.logic.service.AppLockServiceActions
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.model.BatteryHistorySample
+import com.quickcleanpro.phonecleaner.feature.applock.service.AppLockServiceActions
 import com.quickcleanpro.phonecleaner.feature.toolbox.battery.data.BatterySamplingCoordinator
-import com.quickcleanpro.phonecleaner.feature.toolbox.logic.BatteryHistoryOwner
-import com.quickcleanpro.phonecleaner.feature.toolbox.logic.BatteryHistorySampler
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.data.BatteryHistoryOwner
+import com.quickcleanpro.phonecleaner.feature.toolbox.battery.data.BatteryHistorySampler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test

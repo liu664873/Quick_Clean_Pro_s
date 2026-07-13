@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.feature.files.logic.source
+package com.quickcleanpro.phonecleaner.feature.files.shared.data.source
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

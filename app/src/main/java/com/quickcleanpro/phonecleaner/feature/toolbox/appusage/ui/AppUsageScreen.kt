@@ -1,0 +1,773 @@
+package com.quickcleanpro.phonecleaner.feature.toolbox.appusage.ui
+
+import com.quickcleanpro.phonecleaner.feature.toolbox.appusage.*
+
+
+import com.quickcleanpro.phonecleaner.feature.toolbox.appusage.AppUsageDateRange
+import com.quickcleanpro.phonecleaner.feature.toolbox.appusage.AppUsageDisplayItem
+import com.quickcleanpro.phonecleaner.feature.toolbox.appusage.AppUsageMetricTab
+import com.quickcleanpro.phonecleaner.feature.toolbox.appusage.AppUsageUiState
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.quickcleanpro.phonecleaner.R
+import com.quickcleanpro.phonecleaner.feature.toolbox.appusage.AppUsageInfo
+import com.quickcleanpro.phonecleaner.common.ui.components.CleanXScaffoldPage
+import com.quickcleanpro.phonecleaner.common.ui.components.PackageAppIcon
+import com.quickcleanpro.phonecleaner.common.ui.components.RoundedProgressBar
+import com.quickcleanpro.phonecleaner.common.ui.components.popups.StopScanDialog
+import com.quickcleanpro.phonecleaner.common.ui.theme.CleanXBlue
+import com.quickcleanpro.phonecleaner.feature.toolbox.shared.ui.ToolboxScanningContent
+import kotlinx.coroutines.launch
+import java.util.Locale
+
+private val CardBg = Color.White
+private val Navy = Color(0xFF2D3748)
+private val NavyMuted = Color(0xFF8190A5)
+private val Divider = Color(0xFFE3E8EF)
+private val Blue = Color(0xFF22A9E8)
+private val CardRadius = 10.dp
+private val OtherColor = Color(0xFF4F75FE)
+private val DonutColors = listOf(
+    Color(0xFFFF565D),
+    Color(0xFFA03CFE),
+    Color(0xFF80F17D),
+)
+
+@Composable
+internal fun AppUsageScreen(
+    state: AppUsageUiState,
+    onAction: (AppUsageAction) -> Unit,
+) {
+    var rangeExpanded by remember { mutableStateOf(false) }
+
+    CleanXScaffoldPage(
+        title = stringResource(R.string.app_usage),
+        onBack = { onAction(AppUsageAction.Back) },
+        backgroundBrush = Brush.linearGradient(
+            colors = listOf(Color(0xFFF7FAFD), Color(0xFFF7FAFD)),
+        ),
+        contentPadding =
+            if (state.hasAccess && state.isScanning) {
+                PaddingValues(0.dp)
+            } else {
+                PaddingValues(horizontal = 16.dp, vertical = 0.dp)
+            },
+        scrollEnabled = !(state.hasAccess && state.isScanning),
+    ) {
+        if (state.hasAccess && state.isScanning) {
+            ToolboxScanningContent(
+                centerIconRes = R.drawable.ic_scan_app_usage,
+                captionText = stringResource(R.string.app_usage),
+            )
+        } else if (state.hasAccess) {
+            TimeRangeSelector(
+                selectedRange = state.selectedRange,
+                expanded = rangeExpanded,
+                onExpandedChange = { rangeExpanded = it },
+                onRangeSelected = { onAction(AppUsageAction.RangeSelected(it)) },
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            PieChartCard(uiState = state)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            UsageDataCard(
+                uiState = state,
+                onTabSelected = { onAction(AppUsageAction.TabSelected(it)) },
+                onStopApp = { onAction(AppUsageAction.StopApp(it)) },
+            )
+        }
+
+        Spacer(modifier = Modifier.height(100.dp))
+    }
+
+    if (state.showStopDialog) {
+        StopScanDialog(
+            onQuit = { onAction(AppUsageAction.QuitScan) },
+            onResume = { onAction(AppUsageAction.ResumeScan) },
+        )
+    }
+}
+
+@Composable
+private fun TimeRangeSelector(
+    selectedRange: AppUsageDateRange,
+    expanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onRangeSelected: (AppUsageDateRange) -> Unit,
+) {
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val menuWidth = maxWidth.coerceAtMost(343.dp)
+        val rowWidth = (menuWidth - 32.dp).coerceAtLeast(0.dp)
+        val menuOffsetX = (maxWidth - menuWidth).coerceAtLeast(0.dp)
+
+        Surface(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clickable { onExpandedChange(!expanded) },
+            color = CardBg,
+            shape = RoundedCornerShape(CardRadius),
+        ) {
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(selectedRange.labelRes),
+                    color = Navy,
+                    fontSize = 20.sp,
+                    modifier = Modifier.weight(1f),
+                )
+                Icon(
+                    imageVector = Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    tint = Navy,
+                    modifier =
+                        Modifier
+                            .size(24.dp)
+                            .rotate(if (expanded) 180f else 0f),
+                )
+            }
+        }
+        AppUsageRangeMenu(
+            expanded = expanded,
+            selectedRange = selectedRange,
+            menuWidth = menuWidth,
+            rowWidth = rowWidth,
+            offsetX = menuOffsetX,
+            onDismiss = { onExpandedChange(false) },
+            onRangeSelected = { range ->
+                onRangeSelected(range)
+                onExpandedChange(false)
+            },
+        )
+    }
+}
+
+@Composable
+private fun AppUsageRangeMenu(
+    expanded: Boolean,
+    selectedRange: AppUsageDateRange,
+    menuWidth: Dp,
+    rowWidth: Dp,
+    offsetX: Dp,
+    onDismiss: () -> Unit,
+    onRangeSelected: (AppUsageDateRange) -> Unit,
+) {
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = onDismiss,
+        offset = DpOffset(offsetX, 4.dp),
+        modifier =
+            Modifier
+                .width(menuWidth)
+                .height(188.dp)
+                .background(CardBg),
+        shape = RoundedCornerShape(12.dp),
+        containerColor = CardBg,
+        shadowElevation = 8.dp,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .width(menuWidth)
+                    .height(188.dp)
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            AppUsageDateRange.entries.forEachIndexed { index, range ->
+                AppUsageRangeMenuItem(
+                    range = range,
+                    selected = range == selectedRange,
+                    rowWidth = rowWidth,
+                    onClick = { onRangeSelected(range) },
+                )
+                if (index != AppUsageDateRange.entries.lastIndex) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .width(rowWidth)
+                                .height(1.dp)
+                                .background(Color(0xFFD9DEE6)),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AppUsageRangeMenuItem(
+    range: AppUsageDateRange,
+    selected: Boolean,
+    rowWidth: Dp,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .width(rowWidth)
+                .height(21.dp)
+                .clickable { onClick() },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = stringResource(range.labelRes),
+            color = Navy,
+            fontSize = 18.sp,
+            lineHeight = 18.sp,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier.weight(1f),
+        )
+        if (selected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                tint = CleanXBlue,
+                modifier = Modifier.size(24.dp),
+            )
+        } else {
+            Spacer(modifier = Modifier.size(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun PieChartCard(uiState: AppUsageUiState) {
+    val allUsages = uiState.usages
+    val sortedUsages = when (uiState.selectedTab) {
+        AppUsageMetricTab.Duration -> allUsages.sortedWith(
+            compareByDescending<AppUsageInfo> { it.totalForegroundMs }
+                .thenByDescending { it.launchCount }
+                .thenBy { it.appName.lowercase(Locale.US) },
+        )
+        AppUsageMetricTab.LaunchCount -> allUsages.sortedWith(
+            compareByDescending<AppUsageInfo> { it.launchCount }
+                .thenByDescending { it.totalForegroundMs }
+                .thenBy { it.appName.lowercase(Locale.US) },
+        )
+    }
+
+    val topItems = sortedUsages.take(3)
+    val otherItems = sortedUsages.drop(3)
+
+    val donutItems = mutableListOf<DonutItem>()
+    topItems.forEachIndexed { index, usage ->
+        val fraction = if (uiState.totalUsageMs > 0) {
+            usage.totalForegroundMs.toFloat() / uiState.totalUsageMs
+        } else {
+            0f
+        }
+        donutItems.add(
+            DonutItem(
+                fraction = fraction.coerceAtLeast(0.02f),
+                color = donutColor(index),
+            ),
+        )
+    }
+    if (otherItems.isNotEmpty()) {
+        val otherTotalMs = otherItems.sumOf { it.totalForegroundMs }
+        val otherFraction = if (uiState.totalUsageMs > 0) {
+            otherTotalMs.toFloat() / uiState.totalUsageMs
+        } else {
+            0f
+        }
+        donutItems.add(
+            DonutItem(
+                fraction = otherFraction.coerceAtLeast(0.02f),
+                color = OtherColor,
+            ),
+        )
+    }
+
+    if (donutItems.isEmpty()) {
+        donutItems.add(DonutItem(1f, NavyMuted.copy(alpha = 0.2f)))
+    }
+
+    val legendItems =
+        when {
+            allUsages.isEmpty() ->
+                listOf(
+                    LegendEntry(
+                        color = NavyMuted.copy(alpha = 0.3f),
+                        label = stringResource(R.string.no_usage_data_available),
+                    ),
+                )
+            else ->
+                buildList {
+                    topItems.forEachIndexed { index, usage ->
+                        add(
+                            LegendEntry(
+                                color = donutColor(index),
+                                label = usage.appName,
+                            ),
+                        )
+                    }
+                    if (otherItems.isNotEmpty()) {
+                        add(
+                            LegendEntry(
+                                color = OtherColor,
+                                label = stringResource(R.string.other),
+                            ),
+                        )
+                    }
+                }
+        }
+
+    Surface(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(170.dp),
+        color = CardBg,
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val compact = maxWidth < 330.dp
+            val startPadding = if (compact) 20.dp else 35.dp
+            val legendGap = if (compact) 24.dp else 44.dp
+
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(start = startPadding, end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier.size(144.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    DonutChart(
+                        modifier = Modifier.size(144.dp),
+                        items = donutItems,
+                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = formatDurationForCenter(uiState.totalUsageMs),
+                            color = Navy,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(legendGap))
+
+                Column(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .height(117.dp),
+                    verticalArrangement =
+                        if (legendItems.size > 1) {
+                            Arrangement.SpaceBetween
+                        } else {
+                            Arrangement.Center
+                        },
+                ) {
+                    legendItems.forEach { item ->
+                        LegendItem(
+                            color = item.color,
+                            label = item.label,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LegendItem(
+    color: Color,
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(5.dp)
+                .clip(CircleShape)
+                .background(color),
+        )
+        Text(
+            text = label,
+            color = Navy,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+private data class LegendEntry(
+    val color: Color,
+    val label: String,
+)
+
+@Composable
+private fun UsageDataCard(
+    uiState: AppUsageUiState,
+    onTabSelected: (AppUsageMetricTab) -> Unit,
+    onStopApp: (String) -> Unit,
+) {
+    val pagerState = rememberPagerState(
+        initialPage = if (uiState.selectedTab == AppUsageMetricTab.Duration) 0 else 1,
+        pageCount = { 2 },
+    )
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(pagerState.currentPage) {
+        val newTab =
+            if (pagerState.currentPage == 0) {
+                AppUsageMetricTab.Duration
+            } else {
+                AppUsageMetricTab.LaunchCount
+            }
+        if (newTab != uiState.selectedTab) {
+            onTabSelected(newTab)
+        }
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = CardBg,
+        shape = RoundedCornerShape(CardRadius),
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(42.dp)) {
+                    AppUsageHeaderTab(
+                        selected = uiState.selectedTab == AppUsageMetricTab.Duration,
+                        title = stringResource(AppUsageMetricTab.Duration.titleRes),
+                    ) {
+                        if (pagerState.currentPage != 0) {
+                            coroutineScope.launch { pagerState.animateScrollToPage(0) }
+                        }
+                    }
+                    AppUsageHeaderTab(
+                        selected = uiState.selectedTab == AppUsageMetricTab.LaunchCount,
+                        title = stringResource(AppUsageMetricTab.LaunchCount.titleRes),
+                    ) {
+                        if (pagerState.currentPage != 1) {
+                            coroutineScope.launch { pagerState.animateScrollToPage(1) }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = Divider, thickness = 1.dp)
+            Spacer(modifier = Modifier.height(24.dp))
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                if (uiState.visibleItems.isEmpty()) {
+                    EmptyUsageText()
+                } else {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(24.dp),
+                    ) {
+                        uiState.visibleItems.forEach { item ->
+                            AppUsageRow(
+                                item = item,
+                                selectedTab = uiState.selectedTab,
+                                onStopApp = onStopApp,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyUsageText() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 32.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.no_usage_data_available),
+            color = NavyMuted,
+            fontSize = 16.sp,
+        )
+    }
+}
+
+@Composable
+private fun AppUsageHeaderTab(
+    selected: Boolean,
+    title: String,
+    onClick: () -> Unit,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null,
+            onClick = onClick,
+        ),
+    ) {
+        Text(
+            text = title,
+            color = if (selected) Navy else NavyMuted,
+            fontSize = 20.sp,
+            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+            textAlign = TextAlign.Center,
+        )
+        Box(
+            modifier = Modifier
+                .width(86.dp)
+                .height(2.dp)
+                .background(if (selected) Blue else Color.Transparent),
+        )
+    }
+}
+
+@Composable
+private fun AppUsageRow(
+    item: AppUsageDisplayItem,
+    selectedTab: AppUsageMetricTab,
+    onStopApp: (String) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PackageAppIcon(
+            packageName = item.packageName,
+            fallbackText = item.iconText.take(1).ifBlank { "A" },
+            color = donutColor(item.colorIndex),
+            modifier = Modifier.size(44.dp),
+        )
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = item.appName,
+                color = Navy,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            RoundedProgressBar(
+                progress = item.progress,
+                width = 185.dp,
+                height = 4.dp,
+                trackColor = Navy.copy(alpha = 0.15f),
+                fillColor = CleanXBlue,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = itemValueText(item, selectedTab),
+                color = NavyMuted,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Normal,
+            )
+        }
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        Button(
+            onClick = { onStopApp(item.packageName) },
+            enabled = item.isRunning,
+            modifier = Modifier
+                .width(64.dp)
+                .height(32.dp)
+                .clip(RoundedCornerShape(50))
+                .height(32.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            shape = RoundedCornerShape(50),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Blue.copy(alpha = if (item.isRunning) 1f else 0.65f),
+                disabledContainerColor = Blue.copy(alpha = 0.65f),
+                contentColor = Color.White,
+                disabledContentColor = Color.White,
+            ),
+        ) {
+            Text(
+                text = stringResource(R.string.stop),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+            )
+        }
+    }
+}
+
+@Composable
+private fun itemValueText(item: AppUsageDisplayItem, selectedTab: AppUsageMetricTab): String =
+    when (selectedTab) {
+        AppUsageMetricTab.Duration -> formatDuration(item.totalForegroundMs)
+        AppUsageMetricTab.LaunchCount -> pluralStringResource(
+            R.plurals.launch_times_count,
+            item.launchCount,
+            item.launchCount,
+        )
+    }
+
+private data class DonutItem(
+    val fraction: Float,
+    val color: Color,
+)
+
+@Composable
+private fun DonutChart(
+    modifier: Modifier,
+    items: List<DonutItem>,
+) {
+    val emptyColor = NavyMuted.copy(alpha = 0.2f)
+
+    Canvas(modifier = modifier) {
+        val strokeWidth = 21.dp.toPx()
+        val radius = (size.minDimension - strokeWidth) / 2
+        val topLeft = Offset(
+            (size.width - radius * 2) / 2,
+            (size.height - radius * 2) / 2,
+        )
+        val arcSize = Size(radius * 2, radius * 2)
+        var startAngle = -90f
+
+        if (items.isEmpty()) {
+            drawArc(
+                color = emptyColor,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Butt),
+            )
+            return@Canvas
+        }
+
+        items.forEach { item ->
+            val sweepAngle = item.fraction * 360f
+            drawArc(
+                color = item.color,
+                startAngle = startAngle,
+                sweepAngle = sweepAngle,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Butt),
+            )
+            startAngle += sweepAngle
+        }
+    }
+}
+
+private fun donutColor(index: Int): Color = DonutColors[index % DonutColors.size]
+
+
+@Composable
+private fun formatDurationForCenter(totalMs: Long): String {
+    val totalMinutes = (totalMs / 60_000L).coerceAtLeast(0L)
+    val hours = totalMinutes / 60L
+    val minutes = totalMinutes % 60L
+    return when {
+        hours > 0L && minutes > 0L -> "${hours}hr ${minutes}\nmin"
+        hours > 0L -> "${hours}hr"
+        else -> "${minutes}\nmin"
+    }
+}
+
+@Composable
+private fun formatDuration(totalMs: Long): String {
+    val totalMinutes = (totalMs / 60_000L).coerceAtLeast(0L)
+    val hours = totalMinutes / 60L
+    val minutes = totalMinutes % 60L
+    return when {
+        hours > 0L && minutes > 0L -> stringResource(R.string.duration_hours_minutes, hours, minutes)
+        hours > 0L -> stringResource(R.string.duration_hours, hours)
+        else -> stringResource(R.string.duration_minutes, minutes)
+    }
+}

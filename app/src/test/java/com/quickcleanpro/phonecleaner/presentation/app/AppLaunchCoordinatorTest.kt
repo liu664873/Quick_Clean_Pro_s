@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.common.startup
+package com.quickcleanpro.phonecleaner.app.runtime.startup
 
 import android.content.Intent
 import org.junit.Assert.assertEquals
@@ -7,6 +7,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class AppLaunchCoordinatorTest {
+    @Test
+    fun startsWithoutPendingRequest() {
+        assertEquals(null, coordinator().pendingRequest.value)
+    }
+
     @Test
     fun initialIntentWithoutNotificationTargetProducesNormalRequest() {
         val coordinator = coordinator()
@@ -77,37 +82,33 @@ class AppLaunchCoordinatorTest {
     }
 
     @Test
-    fun consumeRequestReturnsPendingRequestAndResetsIt() {
+    fun matchingRequestIsConsumedToNull() {
         val coordinator =
             coordinator(
                 targetRouteResolver = { NOTIFICATION_ROUTE },
             )
         coordinator.onCreate(Intent())
 
-        val consumed = coordinator.consumeRequest()
+        val request = requireNotNull(coordinator.pendingRequest.value)
+        val consumed = coordinator.consumeRequestIfCurrent(request)
 
-        assertEquals(
-            AppLaunchRequest.NotificationTarget(
-                route = NOTIFICATION_ROUTE,
-                source = NotificationLaunchSource.InitialIntent,
-            ),
-            consumed,
-        )
-        assertEquals(AppLaunchRequest.Normal, coordinator.pendingRequest.value)
+        assertTrue(consumed)
+        assertEquals(null, coordinator.pendingRequest.value)
     }
 
     @Test
-    fun repeatedConsumeRequestDoesNotReplayNotificationTarget() {
+    fun consumedRequestCannotBeConsumedAgain() {
         val coordinator =
             coordinator(
                 targetRouteResolver = { NOTIFICATION_ROUTE },
             )
         coordinator.onNewIntent(Intent())
 
-        assertTrue(coordinator.consumeRequest() is AppLaunchRequest.NotificationTarget)
+        val request = requireNotNull(coordinator.pendingRequest.value)
 
-        assertEquals(AppLaunchRequest.Normal, coordinator.consumeRequest())
-        assertEquals(AppLaunchRequest.Normal, coordinator.pendingRequest.value)
+        assertTrue(coordinator.consumeRequestIfCurrent(request))
+        assertFalse(coordinator.consumeRequestIfCurrent(request))
+        assertEquals(null, coordinator.pendingRequest.value)
     }
 
     @Test
@@ -117,11 +118,11 @@ class AppLaunchCoordinatorTest {
                 targetRouteResolver = { NOTIFICATION_ROUTE },
             )
         coordinator.onNewIntent(Intent())
-        val currentRequest = coordinator.pendingRequest.value
+        val currentRequest = requireNotNull(coordinator.pendingRequest.value)
 
         assertTrue(coordinator.consumeRequestIfCurrent(currentRequest))
         assertFalse(coordinator.consumeRequestIfCurrent(currentRequest))
-        assertEquals(AppLaunchRequest.Normal, coordinator.pendingRequest.value)
+        assertEquals(null, coordinator.pendingRequest.value)
     }
 
     @Test

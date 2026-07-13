@@ -1,9 +1,9 @@
-package com.quickcleanpro.phonecleaner.feature.files.logic.duplicates
+package com.quickcleanpro.phonecleaner.feature.files.duplicates
 
 
-import com.quickcleanpro.phonecleaner.feature.files.logic.DuplicateFilesPreferences
-import com.quickcleanpro.phonecleaner.feature.files.logic.FileRepository
-import com.quickcleanpro.phonecleaner.feature.files.logic.ManagedFileItem
+import com.quickcleanpro.phonecleaner.feature.files.duplicates.data.DuplicateFilesPreferences
+import com.quickcleanpro.phonecleaner.feature.files.shared.data.FileRepository
+import com.quickcleanpro.phonecleaner.feature.files.shared.ManagedFileItem
 import kotlinx.coroutines.Dispatchers
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

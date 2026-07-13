@@ -1,6 +1,6 @@
-package com.quickcleanpro.phonecleaner.feature.toolbox.logic.deviceinfo
+package com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo
 
-import com.quickcleanpro.phonecleaner.feature.toolbox.logic.deviceinfo.*
+import com.quickcleanpro.phonecleaner.feature.toolbox.deviceinfo.*
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

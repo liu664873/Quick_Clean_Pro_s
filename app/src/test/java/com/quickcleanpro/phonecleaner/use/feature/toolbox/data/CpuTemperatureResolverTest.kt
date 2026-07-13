@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.feature.toolbox.logic
+package com.quickcleanpro.phonecleaner.feature.toolbox.shared.device
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

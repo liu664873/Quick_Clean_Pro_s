@@ -3,7 +3,7 @@ package com.quickcleanpro.phonecleaner.advertise
 import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
 import com.quickcleanpro.phonecleaner.common.ads.AdRuntimeState
 import com.quickcleanpro.phonecleaner.common.ads.AdScene
-import com.quickcleanpro.phonecleaner.common.operation.OperationAction
+import com.quickcleanpro.phonecleaner.app.runtime.featureflow.OperationAction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

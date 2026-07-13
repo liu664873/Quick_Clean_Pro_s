@@ -4,7 +4,7 @@ import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
 import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
 import com.quickcleanpro.phonecleaner.common.ads.AdAreaKeys
 import com.quickcleanpro.phonecleaner.common.ads.AdScene
-import com.quickcleanpro.phonecleaner.common.operation.OperationAction
+import com.quickcleanpro.phonecleaner.app.runtime.featureflow.OperationAction
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
