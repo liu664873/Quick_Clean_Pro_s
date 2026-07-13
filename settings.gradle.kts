@@ -1,5 +1,4 @@
 pluginManagement {
-    includeBuild("build-logic")
     repositories {
         google()
         mavenCentral()
@@ -35,7 +34,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "QuickCleanPRO"
 include(":app")
-include(":core:model")
-include(":core:platform")
-include(":core:monetization")
-include(":core:designsystem")

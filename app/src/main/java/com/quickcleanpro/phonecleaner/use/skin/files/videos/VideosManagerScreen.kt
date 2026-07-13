@@ -42,7 +42,7 @@ import com.quickcleanpro.phonecleaner.use.skin.files.common.views.FileOperationP
 private val FEATURE = FeatureKey.VIDEOS
 
 @Composable
-fun VideosManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: VideosManagerViewModel) {
+internal fun VideosManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: VideosManagerViewModel) {
     VideosManagerScreenState(navigator = navigator, dependencies = dependencies, viewModel = viewModel)
 }
 

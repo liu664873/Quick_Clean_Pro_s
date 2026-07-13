@@ -44,7 +44,7 @@ import com.quickcleanpro.phonecleaner.use.core.common.format.FileSizeFormatter
 private val FEATURE = FeatureKey.PHOTOS
 
 @Composable
-fun PhotosManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: PhotosManagerViewModel) {
+internal fun PhotosManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: PhotosManagerViewModel) {
     PhotosManagerScreenState(navigator = navigator, dependencies = dependencies, viewModel = viewModel)
 }
 

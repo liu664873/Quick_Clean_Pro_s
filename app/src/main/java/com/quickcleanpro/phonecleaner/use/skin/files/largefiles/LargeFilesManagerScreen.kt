@@ -48,7 +48,7 @@ import com.quickcleanpro.phonecleaner.use.core.common.format.FileSizeFormatter
 private val FEATURE = FeatureKey.LARGE_FILES
 
 @Composable
-fun LargeFilesManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: LargeFilesManagerViewModel) {
+internal fun LargeFilesManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: LargeFilesManagerViewModel) {
     LargeFilesManagerScreenState(navigator = navigator, dependencies = dependencies, viewModel = viewModel)
 }
 

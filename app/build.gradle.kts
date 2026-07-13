@@ -4,8 +4,9 @@ plugins {
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
     alias(libs.plugins.ktlint)
-    id("quickclean.product-config")
 }
+
+apply(from = "product-config.gradle")
 
 android {
     namespace = "com.quickcleanpro.phonecleaner"
@@ -56,10 +57,11 @@ ktlint {
 }
 
 dependencies {
-    implementation(project(":core:model"))
-    implementation(project(":core:platform"))
-    implementation(project(":core:monetization"))
-    implementation(project(":core:designsystem"))
+    implementation(libs.pdffox.advertise) {
+        exclude(group = "com.pangle.global", module = "pag-sdk")
+    }
+    implementation(libs.pangle.pag.sdk.ad)
+    implementation(libs.tiktok.business.android.sdk.comp)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.ui.graphics)

@@ -172,7 +172,7 @@ private fun DocumentsManagerContent(
     onTabSelected: (Int) -> Unit,
     onToggleAll: () -> Unit,
     onSelect: (Int) -> Unit,
-    onOpenDetail: (com.quickcleanpro.phonecleaner.use.feature.files.presentation.common.FileListDisplayItem) -> Unit,
+    onOpenDetail: (FileListDisplayItem) -> Unit,
     onNavigateTool: (AppDestination) -> Unit,
 
     onContinue: () -> Unit,

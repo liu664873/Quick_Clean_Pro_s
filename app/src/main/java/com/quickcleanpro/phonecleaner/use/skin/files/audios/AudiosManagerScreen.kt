@@ -42,7 +42,7 @@ import com.quickcleanpro.phonecleaner.use.skin.files.common.views.FileOperationP
 private val FEATURE = FeatureKey.AUDIOS
 
 @Composable
-fun AudiosManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: AudiosManagerViewModel) {
+internal fun AudiosManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: AudiosManagerViewModel) {
     AudiosManagerScreenState(navigator = navigator, dependencies = dependencies, viewModel = viewModel)
 }
 

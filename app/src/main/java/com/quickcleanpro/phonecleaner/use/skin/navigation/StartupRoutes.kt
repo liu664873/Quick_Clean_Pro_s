@@ -16,6 +16,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.quickcleanpro.phonecleaner.use.core.ads.AdScene
+import com.quickcleanpro.phonecleaner.use.core.ads.InterstitialAdInterceptor
 import com.quickcleanpro.phonecleaner.use.core.ads.StartupAdCoordinator
 import com.quickcleanpro.phonecleaner.use.core.startup.AppLaunchCoordinator
 import com.quickcleanpro.phonecleaner.use.core.startup.AppLaunchRequest

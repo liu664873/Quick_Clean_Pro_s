@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-internal class DocumentsManagerViewModel(
+class DocumentsManagerViewModel(
     private val repository: FileRepository,
     ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     testLoader: (((suspend () -> Unit)) -> Unit)? = null,

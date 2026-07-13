@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-internal data class FileManagerTabDisplayItem(
+data class FileManagerTabDisplayItem(
     val title: String,
     val sizeLabel: String = ""
 )
@@ -37,12 +37,12 @@ internal enum class FileListDisplayStyle {
     Documents
 }
 
-internal enum class FileListIconKind {
+enum class FileListIconKind {
     LargeVideo,
     Document
 }
 
-internal data class FileListDisplayItem(
+data class FileListDisplayItem(
     val id: Int,
     val name: String,
     val meta: String,

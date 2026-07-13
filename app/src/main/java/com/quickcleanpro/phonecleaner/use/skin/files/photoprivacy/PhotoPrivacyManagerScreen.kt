@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.quickcleanpro.phonecleaner.R
+import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
 import com.quickcleanpro.phonecleaner.use.core.feature.FeatureKey
 import com.quickcleanpro.phonecleaner.use.skin.common.components.CleanXBottomActionBar
 import com.quickcleanpro.phonecleaner.use.skin.common.components.popups.DeleteConfirmDialog
@@ -38,7 +39,7 @@ import com.quickcleanpro.phonecleaner.use.skin.files.common.views.list.FileManag
 private val FEATURE = FeatureKey.PHOTO_PRIVACY
 
 @Composable
-fun PhotoPrivacyManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: PhotoPrivacyManagerViewModel) {
+internal fun PhotoPrivacyManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: PhotoPrivacyManagerViewModel) {
     PhotoPrivacyManagerScreenState(navigator = navigator, dependencies = dependencies, viewModel = viewModel)
 }
 

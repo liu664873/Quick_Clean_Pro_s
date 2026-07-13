@@ -13,12 +13,12 @@ import com.quickcleanpro.phonecleaner.use.feature.files.presentation.common.mana
 import com.quickcleanpro.phonecleaner.use.feature.files.presentation.common.splitFileSizeLabel
 import com.quickcleanpro.phonecleaner.use.core.common.format.FileSizeFormatter
 
-internal data class DocumentItem(
+data class DocumentItem(
     val id: Int,
     val file: ManagedFileItem,
 )
 
-internal data class DocumentsManagerUiState(
+data class DocumentsManagerUiState(
     val phase: FileOperationPhase = FileOperationPhase.Scanning,
     val items: List<DocumentItem> = emptyList(),
     val tabs: List<FileManagerTabDisplayItem> = emptyList(),

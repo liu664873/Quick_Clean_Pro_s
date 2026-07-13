@@ -43,7 +43,7 @@ import com.quickcleanpro.phonecleaner.use.skin.files.common.views.list.FileManag
 private val FEATURE = FeatureKey.SCREENSHOTS
 
 @Composable
-fun ScreenshotsManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: ScreenshotsManagerViewModel) {
+internal fun ScreenshotsManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: ScreenshotsManagerViewModel) {
     ScreenshotsManagerScreenState(navigator = navigator, dependencies = dependencies, viewModel = viewModel)
 }
 

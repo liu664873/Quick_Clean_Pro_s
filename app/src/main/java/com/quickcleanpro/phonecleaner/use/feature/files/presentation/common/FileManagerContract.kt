@@ -12,7 +12,7 @@ enum class FileManagerPhase {
     NoResults,
 }
 
-internal data class FileManagerState(
+data class FileManagerState(
     val phase: FileManagerPhase = FileManagerPhase.Scanning,
     val selectedKeys: Set<String> = emptySet(),
     val detailIndex: Int? = null,
@@ -20,7 +20,7 @@ internal data class FileManagerState(
     val errorMessage: String? = null,
 )
 
-internal data class FileManagerResult(
+data class FileManagerResult(
     val freedBytes: Long = 0L,
     val changedCount: Int = 0,
 )
@@ -45,7 +45,7 @@ internal sealed interface FileManagerAction {
     data object ActiveOperationCancelled : FileManagerAction
 }
 
-internal sealed interface FileManagerEffect {
+sealed interface FileManagerEffect {
     data class ConfirmOperation(val action: OperationAction) : FileManagerEffect
     data class OperationCompleted(val action: OperationAction) : FileManagerEffect
     data object ResultShown : FileManagerEffect

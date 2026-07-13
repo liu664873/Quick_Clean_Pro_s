@@ -43,7 +43,7 @@ import com.quickcleanpro.phonecleaner.use.skin.files.common.views.list.FileManag
 private val FEATURE = FeatureKey.SIMILAR_PHOTOS
 
 @Composable
-fun SimilarPhotosManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: SimilarPhotosManagerViewModel) {
+internal fun SimilarPhotosManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: SimilarPhotosManagerViewModel) {
     SimilarPhotosManagerScreenState(navigator = navigator, dependencies = dependencies, viewModel = viewModel)
 }
 

@@ -1,0 +1,149 @@
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+def configFile = rootProject.file('config/product.json')
+if (!configFile.isFile()) throw new GradleException("Missing product config: $configFile")
+def config = new JsonSlurper().parse(configFile)
+
+if (config.schemaVersion != 1) throw new GradleException("Unsupported product schemaVersion: ${config.schemaVersion}")
+if (!(config.identity.applicationId ==~ /^[A-Za-z][A-Za-z0-9_]*(\.[A-Za-z][A-Za-z0-9_]*)+$/)) {
+    throw new GradleException("Invalid applicationId: ${config.identity.applicationId}")
+}
+if (![config.identity.appName, config.identity.profileKey, config.identity.themeKey].every { it }) {
+    throw new GradleException('Product identity fields must not be blank')
+}
+if (config.version.code < 1 || !config.version.name) throw new GradleException('Invalid product version')
+if (config.advertising.policyFile != 'config/ad_policy.json') {
+    throw new GradleException("advertising.policyFile must be 'config/ad_policy.json'")
+}
+if (!config.advertising.admob.nativeIds || !config.advertising.admob.nativeIds.every { ids ->
+    ['highPriceID', 'midPriceID', 'lowPriceID'].every { ids[it] }
+}) throw new GradleException('Every advertising.admob.nativeIds entry must define highPriceID, midPriceID, and lowPriceID')
+[config.legal.privacyUrl, config.legal.termsUrl, config.services.releaseHost, config.analytics.thinkingServerUrl].each { url ->
+    if (!url.startsWith('https://')) throw new GradleException("Production URL must use HTTPS: $url")
+}
+
+def policyFile = rootProject.file(config.advertising.policyFile).canonicalFile
+if (!policyFile.toPath().startsWith(rootProject.projectDir.canonicalFile.toPath())) {
+    throw new GradleException('advertising.policyFile must stay inside the repository')
+}
+if (!policyFile.isFile()) throw new GradleException("Missing canonical ad policy: $policyFile")
+def policy = new JsonSlurper().parse(policyFile)
+if (policy.containsKey('package_name')) {
+    throw new GradleException('Canonical ad policy must not define package_name; it is generated from identity.applicationId')
+}
+def areaKeys = (policy.ad_units ?: []).collect { it.areakey }.findAll()
+if (!areaKeys) throw new GradleException('Canonical ad policy must define ad_units')
+def duplicateAreaKeys = areaKeys.countBy { it }.findAll { key, count -> count > 1 }.keySet().sort()
+if (duplicateAreaKeys) throw new GradleException("Canonical ad policy contains duplicate area keys: $duplicateAreaKeys")
+['ad_policy.json', 'native_ad_ids.json'].each { name ->
+    def sourceFile = file("src/main/res/raw/$name")
+    if (sourceFile.exists()) throw new GradleException("$sourceFile duplicates generated product configuration and must be removed")
+}
+
+def loadProperties = { File source ->
+    def properties = new Properties()
+    if (source.isFile()) source.withInputStream { properties.load(it) }
+    properties
+}
+def local = loadProperties(rootProject.file('config/product.local.properties'))
+def legacyLocal = loadProperties(rootProject.file('config/app.local.properties'))
+def resolveValue = { String name, Object defaultValue = '' ->
+    providers.gradleProperty(name).orNull ?: providers.environmentVariable(name).orNull ?:
+        local.getProperty(name) ?: legacyLocal.getProperty(name) ?: defaultValue.toString()
+}
+def buildConfigString = { target, String name, Object rawValue ->
+    def escaped = rawValue.toString().replace('\\', '\\\\').replace('"', '\\"').replace('\r', '\\r').replace('\n', '\\n')
+    target.buildConfigField('String', name, "\"$escaped\"")
+}
+
+android {
+    defaultConfig {
+        applicationId = config.identity.applicationId
+        versionCode = config.version.code as int
+        versionName = config.version.name
+        resValue 'string', 'app_name', config.identity.appName
+        resValue 'string', 'app_profile_key', config.identity.profileKey
+        resValue 'string', 'app_theme_key', config.identity.themeKey
+        resValue 'string', 'privacy_policy_url', config.legal.privacyUrl
+        resValue 'string', 'terms_of_service_url', config.legal.termsUrl
+
+        def trustlookKey = resolveValue('TRUSTLOOK_QUICKCLEANPRO_API_KEY')
+        manifestPlaceholders += [
+            trustlookApiKey: trustlookKey,
+            advAdmobAppId: resolveValue('ADV_ADMOB_APP_ID', config.advertising.admob.appId),
+            advFacebookAppId: resolveValue('ADV_FACEBOOK_APP_ID'),
+            advFacebookClientToken: resolveValue('ADV_FACEBOOK_CLIENT_TOKEN')
+        ]
+        def values = [
+            TRUSTLOOK_API_KEY: trustlookKey,
+            PRODUCT_PROFILE_KEY: config.identity.profileKey,
+            PRODUCT_THEME_KEY: config.identity.themeKey,
+            ADV_PRIVACY_URL: config.legal.privacyUrl,
+            ADV_TERMS_URL: config.legal.termsUrl,
+            ADV_ADMOB_APP_ID: resolveValue('ADV_ADMOB_APP_ID', config.advertising.admob.appId),
+            ADV_ADMOB_BANNER_ID: resolveValue('ADV_ADMOB_BANNER_ID', config.advertising.admob.bannerId),
+            ADV_ADMOB_INTERSTITIAL_ID: resolveValue('ADV_ADMOB_INTERSTITIAL_ID', config.advertising.admob.interstitialId),
+            ADV_ADMOB_NATIVE_ID: resolveValue('ADV_ADMOB_NATIVE_ID', config.advertising.admob.nativeId),
+            ADV_ADMOB_NATIVE_IDS_JSON: resolveValue('ADV_ADMOB_NATIVE_IDS_JSON', JsonOutput.toJson(config.advertising.admob.nativeIds)),
+            ADV_ADMOB_OPEN_ID: resolveValue('ADV_ADMOB_OPEN_ID', config.advertising.admob.openId),
+            ADV_ADMOB_REWARDED_ID: resolveValue('ADV_ADMOB_REWARDED_ID', config.advertising.admob.rewardedId),
+            ADV_DEFAULT_TOPIC: resolveValue('ADV_DEFAULT_TOPIC', config.advertising.defaultTopic),
+            ADV_AD_DEBUG_OVERRIDE_MODE: resolveValue('ADV_AD_DEBUG_OVERRIDE_MODE', config.advertising.debugOverrideMode),
+            ADV_SERVER_RELEASE_HOST: resolveValue('ADV_SERVER_RELEASE_HOST', config.services.releaseHost),
+            ADV_SERVER_TEST_HOST: resolveValue('ADV_SERVER_TEST_HOST', config.services.testHost),
+            ADV_PLAY_INTEGRITY_PARSE_TOKEN_KEY: resolveValue('ADV_PLAY_INTEGRITY_PARSE_TOKEN_KEY'),
+            ADV_REMOTE_CONFIG_ENCRYPTION_KEY: resolveValue('ADV_REMOTE_CONFIG_ENCRYPTION_KEY'),
+            ADV_REMOTE_CONFIG_ENCRYPTION_KEY_ID: resolveValue('ADV_REMOTE_CONFIG_ENCRYPTION_KEY_ID'),
+            ADV_THINKING_APP_KEY: resolveValue('ADV_THINKING_APP_KEY', config.analytics.thinkingAppKey),
+            ADV_THINKING_SERVER_URL: resolveValue('ADV_THINKING_SERVER_URL', config.analytics.thinkingServerUrl),
+            ADV_FACEBOOK_APP_ID: resolveValue('ADV_FACEBOOK_APP_ID'),
+            ADV_FACEBOOK_CLIENT_TOKEN: resolveValue('ADV_FACEBOOK_CLIENT_TOKEN'),
+            ADV_SINGULAR_API_KEY: resolveValue('ADV_SINGULAR_API_KEY'),
+            ADV_SINGULAR_SECRET: resolveValue('ADV_SINGULAR_SECRET'),
+            ADV_TIKTOK_ACCESS_TOKEN: resolveValue('ADV_TIKTOK_ACCESS_TOKEN'),
+            ADV_TIKTOK_TT_APP_ID: resolveValue('ADV_TIKTOK_TT_APP_ID'),
+            ADV_TIKTOK_APP_ID: resolveValue('ADV_TIKTOK_APP_ID'),
+            ADV_SAFE_EXPECTED_SIGNATURES: resolveValue('ADV_SAFE_EXPECTED_SIGNATURES')
+        ]
+        values.each { name, value -> buildConfigString(delegate, name.toString(), value) }
+        def cloudProjectNumber = resolveValue('ADV_PLAY_INTEGRITY_CLOUD_PROJECT_NUMBER', config.services.playIntegrityCloudProjectNumber)
+        try {
+            buildConfigField 'long', 'ADV_PLAY_INTEGRITY_CLOUD_PROJECT_NUMBER', "${Long.parseLong(cloudProjectNumber)}L"
+        } catch (NumberFormatException ignored) {
+            throw new GradleException('ADV_PLAY_INTEGRITY_CLOUD_PROJECT_NUMBER must be a long')
+        }
+    }
+}
+
+def firebaseFile = file('google-services.json')
+if (!firebaseFile.isFile()) throw new GradleException("Missing Firebase config: $firebaseFile")
+def firebase = new JsonSlurper().parse(firebaseFile)
+def firebasePackages = (firebase.client ?: []).collect {
+    it.client_info?.android_client_info?.package_name
+}.findAll()
+if (!(config.identity.applicationId in firebasePackages)) {
+    throw new GradleException("google-services.json does not contain applicationId '${config.identity.applicationId}'")
+}
+
+def generatedResDirectory = layout.buildDirectory.dir('generated/product-config/res')
+android.sourceSets.main.res.srcDir(generatedResDirectory.get().asFile.absolutePath)
+def generateProductAdResources = tasks.register('generateProductAdResources') {
+    group = 'build setup'
+    description = 'Generates ad_policy.json and native_ad_ids.json from canonical product configuration.'
+    inputs.files(configFile, policyFile)
+    outputs.dir(generatedResDirectory)
+    doLast {
+        def output = generatedResDirectory.get().asFile
+        def rawDirectory = new File(output, 'raw')
+        rawDirectory.mkdirs()
+        def packagedPolicy = new LinkedHashMap(policy)
+        packagedPolicy.put('package_name', config.identity.applicationId)
+        def orderedPolicy = [package_name: packagedPolicy.remove('package_name')] + packagedPolicy
+        new File(rawDirectory, 'ad_policy.json').text = JsonOutput.prettyPrint(JsonOutput.toJson(orderedPolicy)) + '\n'
+        new File(rawDirectory, 'native_ad_ids.json').text = JsonOutput.prettyPrint(JsonOutput.toJson(config.advertising.admob.nativeIds)) + '\n'
+    }
+}
+tasks.configureEach {
+    if (name == 'preBuild' || (name.startsWith('merge') && name.endsWith('Resources'))) dependsOn(generateProductAdResources)
+}

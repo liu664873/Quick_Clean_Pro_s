@@ -6,7 +6,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-internal class FileOperationRunner(
+class FileOperationRunner(
     private val scope: CoroutineScope,
     private val dispatcher: CoroutineDispatcher,
     private val testLoader: (((suspend () -> Unit)) -> Unit)? = null,

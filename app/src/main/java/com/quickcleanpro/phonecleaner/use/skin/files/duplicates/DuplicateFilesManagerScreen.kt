@@ -35,7 +35,7 @@ import com.quickcleanpro.phonecleaner.use.core.common.format.FileSizeFormatter
 private val FEATURE = FeatureKey.DUPLICATE_FILES
 
 @Composable
-fun DuplicateFilesManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: DuplicateFilesManagerViewModel) {
+internal fun DuplicateFilesManagerScreen(navigator: AppNavigator, dependencies: AppRouteDependencies, viewModel: DuplicateFilesManagerViewModel) {
     DuplicateFilesManagerScreenState(navigator = navigator, dependencies = dependencies, viewModel = viewModel)
 }
 

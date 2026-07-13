@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
-internal abstract class BaseFileManagerViewModel(
+abstract class BaseFileManagerViewModel(
     protected val featureKey: FeatureKey,
     protected val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     testLoader: (((suspend () -> Unit)) -> Unit)? = null,
