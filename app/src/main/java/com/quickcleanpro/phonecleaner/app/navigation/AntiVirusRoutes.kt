@@ -61,13 +61,12 @@ internal fun NavGraphBuilder.registerAntiVirusRoutes(
         ScanVirusResultRoute(
             navigator = navigator,
             viewModel = viewModel,
-            featureFlow = featureFlow,
             externalActivities = externalActivities,
         )
     }
 
     composable(AppDestination.NoVirusResult.route) {
-        NoVirusResultRoute(navigator, featureFlow)
+        NoVirusResultRoute(navigator)
     }
 }
 

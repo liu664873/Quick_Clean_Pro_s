@@ -18,10 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.quickcleanpro.phonecleaner.R
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
 import com.quickcleanpro.phonecleaner.app.navigation.AppNavigator
-import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
 import com.quickcleanpro.phonecleaner.app.runtime.external.ExternalActivityLauncher
-import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureExitReason
-import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureFlowRuntime
 import com.quickcleanpro.phonecleaner.feature.antivirus.ui.NoVirusResultScreen
 import com.quickcleanpro.phonecleaner.feature.antivirus.ui.ScanVirusResultScreen
 import java.io.File
@@ -37,7 +34,6 @@ sealed interface VirusResultAction {
 fun ScanVirusResultRoute(
     navigator: AppNavigator,
     viewModel: VirusScanViewModel,
-    featureFlow: FeatureFlowRuntime,
     externalActivities: ExternalActivityLauncher,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -46,7 +42,7 @@ fun ScanVirusResultRoute(
     val deletionFailedText = stringResource(R.string.deletion_failed)
 
     fun exit() {
-        featureFlow.exit(FeatureKey.ANTI_VIRUS, FeatureExitReason.Return) { navigator.back() }
+        navigator.back()
     }
 
     LaunchedEffect(Unit) { viewModel.refreshAdbRisk() }
@@ -98,12 +94,11 @@ fun ScanVirusResultRoute(
 @Composable
 fun NoVirusResultRoute(
     navigator: AppNavigator,
-    featureFlow: FeatureFlowRuntime,
 ) {
     NoVirusResultScreen(
         onAction = { action ->
             if (action == VirusResultAction.Back) {
-                featureFlow.exit(FeatureKey.ANTI_VIRUS, FeatureExitReason.Return) { navigator.back() }
+                navigator.back()
             }
         },
         onNavigate = navigator::resetTo,
