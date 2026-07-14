@@ -1,7 +1,7 @@
 package com.quickcleanpro.phonecleaner.notification
 
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
-import com.quickcleanpro.phonecleaner.app.runtime.notification.ToolNotificationIntentFactory
+import com.quickcleanpro.phonecleaner.app.runtime.notification.NotificationIntentRouteResolver
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -9,6 +9,34 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NotificationRouteMappingTest {
+    @Test
+    fun sdkRouteExtraWinsOverLegacyExtras() {
+        val route =
+            NotificationIntentRouteResolver.targetRouteFromExtras(
+                mapOf(
+                    "Route" to "/networkScan",
+                    "quickclean_target_route" to "photos",
+                ),
+            )
+
+        assertEquals(AppDestination.NetworkScan.route, route)
+    }
+
+    @Test
+    fun legacyRouteExtrasRemainSupported() {
+        listOf(
+            "quickclean_target_route",
+            "route",
+            "target_route",
+            "targetRoute",
+        ).forEach { key ->
+            assertEquals(
+                AppDestination.JunkClean.route,
+                NotificationIntentRouteResolver.targetRouteFromExtras(mapOf(key to "/junkClean")),
+            )
+        }
+    }
+
     @Test
     fun localNotificationContentRoutesResolveToSupportedTargets() {
         val routes = notificationRoutesFrom("app/src/main/res/raw/notification_content.json")
@@ -28,7 +56,7 @@ class NotificationRouteMappingTest {
     @Test
     fun invalidLegacyRouteDoesNotBlockValidSdkRoute() {
         val route =
-            ToolNotificationIntentFactory.resolveTargetRouteCandidates(
+            NotificationIntentRouteResolver.resolveTargetRouteCandidates(
                 listOf("missing_route", "/junkClean"),
             )
 
@@ -38,7 +66,7 @@ class NotificationRouteMappingTest {
     @Test
     fun firstValidNotificationRouteCandidateWins() {
         val route =
-            ToolNotificationIntentFactory.resolveTargetRouteCandidates(
+            NotificationIntentRouteResolver.resolveTargetRouteCandidates(
                 listOf("missing_route", "/networkScan", "photos"),
             )
 
@@ -49,25 +77,25 @@ class NotificationRouteMappingTest {
     fun routeVariantsNormalizeBeforeResolving() {
         assertEquals(
             AppDestination.JunkClean.route,
-            ToolNotificationIntentFactory.resolveTargetRouteCandidates(
+            NotificationIntentRouteResolver.resolveTargetRouteCandidates(
                 listOf("/junkClean?from=push"),
             ),
         )
         assertEquals(
             AppDestination.NetworkScan.route,
-            ToolNotificationIntentFactory.resolveTargetRouteCandidates(
+            NotificationIntentRouteResolver.resolveTargetRouteCandidates(
                 listOf("/networkScan/"),
             ),
         )
         assertEquals(
             AppDestination.NotificationCleaner.route,
-            ToolNotificationIntentFactory.resolveTargetRouteCandidates(
+            NotificationIntentRouteResolver.resolveTargetRouteCandidates(
                 listOf("notification_bar"),
             ),
         )
         assertEquals(
             AppDestination.NotificationCleaner.route,
-            ToolNotificationIntentFactory.resolveTargetRouteCandidates(
+            NotificationIntentRouteResolver.resolveTargetRouteCandidates(
                 listOf("/notificationClean"),
             ),
         )
@@ -77,7 +105,7 @@ class NotificationRouteMappingTest {
     fun routeNormalizationTrimsWhitespaceAndFragments() {
         assertEquals(
             AppDestination.JunkClean.route,
-            ToolNotificationIntentFactory.resolveTargetRouteCandidates(
+            NotificationIntentRouteResolver.resolveTargetRouteCandidates(
                 listOf("  /junkClean?from=push#notification  "),
             ),
         )
@@ -87,7 +115,7 @@ class NotificationRouteMappingTest {
     fun canonicalRouteValuesResolveWithoutLegacyAliases() {
         assertEquals(
             AppDestination.BatteryInfo.route,
-            ToolNotificationIntentFactory.resolveTargetRouteCandidates(
+            NotificationIntentRouteResolver.resolveTargetRouteCandidates(
                 listOf(" battery_info "),
             ),
         )
@@ -97,7 +125,7 @@ class NotificationRouteMappingTest {
     fun unknownNotificationRouteFallsBackToHome() {
         assertEquals(
             AppDestination.Home.route,
-            ToolNotificationIntentFactory.resolveTargetRouteCandidates(
+            NotificationIntentRouteResolver.resolveTargetRouteCandidates(
                 listOf("/unknownRoute"),
             ),
         )
@@ -105,14 +133,16 @@ class NotificationRouteMappingTest {
 
     @Test
     fun emptyNotificationRouteCandidatesReturnNull() {
-        assertNull(ToolNotificationIntentFactory.resolveTargetRouteCandidates(emptyList()))
+        assertNull(NotificationIntentRouteResolver.targetRoute(null))
+        assertNull(NotificationIntentRouteResolver.targetRouteFromExtras(emptyMap()))
+        assertNull(NotificationIntentRouteResolver.resolveTargetRouteCandidates(emptyList()))
     }
 
     private fun assertAllRoutesResolve(routes: Set<String>) {
         val unresolved =
             routes.filter { route ->
                 AppDestination.normalizeNotificationRoute(route) == null ||
-                    !ToolNotificationIntentFactory.isValidRoute(route)
+                    !NotificationIntentRouteResolver.isValidRoute(route)
             }
 
         assertTrue("Unresolved notification routes: $unresolved", unresolved.isEmpty())

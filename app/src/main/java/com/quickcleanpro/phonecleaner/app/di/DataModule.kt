@@ -30,7 +30,7 @@ import com.quickcleanpro.phonecleaner.feature.toolbox.battery.data.BatteryHistor
 import com.quickcleanpro.phonecleaner.feature.applock.AppLockMonitoringController
 import com.quickcleanpro.phonecleaner.feature.applock.AppLockRepository
 import com.quickcleanpro.phonecleaner.feature.applock.AppLockMonitoringService
-import com.quickcleanpro.phonecleaner.app.runtime.notification.PersistentAppLockMonitoringService
+import com.quickcleanpro.phonecleaner.app.runtime.notification.BackgroundAppLockMonitoringService
 import com.quickcleanpro.phonecleaner.feature.toolbox.appusage.data.AppUsageRepository
 import com.quickcleanpro.phonecleaner.feature.toolbox.battery.data.BatteryHistorySampler
 import com.quickcleanpro.phonecleaner.feature.toolbox.battery.data.BatteryHistoryRepository
@@ -61,7 +61,7 @@ val dataModule: Module =
         single<VirusSecurityRepository> { VirusSecurityRepositoryImpl(androidContext()) }
         single<AntivirusPreferences> { AntivirusPreferencesImpl(get()) }
         single<AppLockRepository> { AppLockRepositoryImpl(androidContext()) }
-        single<AppLockMonitoringService> { PersistentAppLockMonitoringService(androidContext()) }
+        single<AppLockMonitoringService> { BackgroundAppLockMonitoringService(androidContext()) }
         single<AppLockMonitoringController> { AppLockMonitoringControllerImpl(get(), get()) }
         single<AppUsageRepository> { AppUsageRepositoryImpl(androidContext()) }
         single<NetworkInfoReader> { AndroidNetworkInfoReader(androidContext()) }

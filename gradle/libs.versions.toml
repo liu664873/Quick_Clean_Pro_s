@@ -28,7 +28,7 @@ gson = "2.13.2"
 integrity = "1.6.0"
 googleServices = "4.4.3"
 firebaseCrashlyticsGradle = "3.0.6"
-pdffoxAdvertise = "1.0.9"
+pdffoxAdvertise = "1.0.10"
 panglePagSdkAd = "unfat-7502-20250805192841-release"
 tiktokBusinessAndroidSdk = "1.3.7-rc.2"
 

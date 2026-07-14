@@ -1,7 +1,5 @@
 package com.quickcleanpro.phonecleaner.common.permission
 
-import com.quickcleanpro.phonecleaner.common.permission.PermissionType
-
 sealed interface PermissionRequestTarget {
     val key: String
 

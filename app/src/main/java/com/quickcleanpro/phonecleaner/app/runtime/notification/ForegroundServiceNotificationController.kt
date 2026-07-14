@@ -18,7 +18,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-internal class PersistentNotificationController(
+internal class ForegroundServiceNotificationController(
     private val service: Service,
     private val scope: CoroutineScope,
     private val shouldStop: () -> Boolean,
@@ -68,12 +68,12 @@ internal class PersistentNotificationController(
         val notification = buildNotification()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             service.startForeground(
-                PersistentNotificationService.PERSISTENT_NOTIFICATION_ID,
+                AppBackgroundRuntimeService.FOREGROUND_NOTIFICATION_ID,
                 notification,
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
             )
         } else {
-            service.startForeground(PersistentNotificationService.PERSISTENT_NOTIFICATION_ID, notification)
+            service.startForeground(AppBackgroundRuntimeService.FOREGROUND_NOTIFICATION_ID, notification)
         }
     }
 
@@ -118,7 +118,7 @@ internal class PersistentNotificationController(
         return runCatching {
             val manager = service.getSystemService(NotificationManager::class.java)
             manager.activeNotifications.any {
-                it.id == PersistentNotificationService.PERSISTENT_NOTIFICATION_ID &&
+                it.id == AppBackgroundRuntimeService.FOREGROUND_NOTIFICATION_ID &&
                     it.packageName == service.packageName
             }
         }.getOrDefault(true)

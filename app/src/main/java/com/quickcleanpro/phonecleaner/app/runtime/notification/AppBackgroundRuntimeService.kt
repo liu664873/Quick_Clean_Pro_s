@@ -19,14 +19,14 @@ import kotlinx.coroutines.cancel
 import org.koin.android.ext.android.inject
 import java.util.concurrent.atomic.AtomicBoolean
 
-class PersistentNotificationService : Service() {
+class AppBackgroundRuntimeService : Service() {
     private val batteryHistorySampler: BatteryHistorySampler by inject()
     private val appLockRepository: AppLockRepository by inject()
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private lateinit var batterySampling: BatterySamplingCoordinator
     private lateinit var appLock: AppLockServiceCoordinator
-    private lateinit var notification: PersistentNotificationController
+    private lateinit var notification: ForegroundServiceNotificationController
     private lateinit var commandDispatcher: PersistentServiceCommandDispatcher
     private lateinit var commandReceiver: PersistentServiceCommandReceiver
 
@@ -34,12 +34,11 @@ class PersistentNotificationService : Service() {
         super.onCreate()
         batterySampling = BatterySamplingCoordinator(batteryHistorySampler)
         appLock = AppLockServiceCoordinator(this, appLockRepository, serviceScope)
-        notification = PersistentNotificationController(this, serviceScope, stopRequested::get)
+        notification = ForegroundServiceNotificationController(this, serviceScope, stopRequested::get)
         commandDispatcher =
             PersistentServiceCommandDispatcher(
                 appLock = appLock,
                 notification = notification,
-                setAppInForeground = appInForeground::set,
                 stopService = ::requestStop,
             )
         commandReceiver = PersistentServiceCommandReceiver(this, commandDispatcher::dispatch)
@@ -111,24 +110,22 @@ class PersistentNotificationService : Service() {
         private val _isRunning = AtomicBoolean(false)
         private val startInFlight = AtomicBoolean(false)
         private val stopRequested = AtomicBoolean(false)
-        private val appInForeground = AtomicBoolean(true)
         private val mainHandler = Handler(Looper.getMainLooper())
 
         private const val ACTION_START = PersistentServiceActions.START
         const val ACTION_ENABLE_MONITORING = PersistentServiceActions.ENABLE_MONITORING
         const val ACTION_DISABLE_MONITORING = PersistentServiceActions.DISABLE_MONITORING
-        private const val ACTION_APP_BACKGROUND = PersistentServiceActions.APP_BACKGROUND
         private const val ACTION_STOP_SERVICE = PersistentServiceActions.STOP_SERVICE
         const val ACTION_PASSWORD_SUCCESS = PersistentServiceActions.PASSWORD_SUCCESS
         const val ACTION_LOCK_SCREEN_CANCELLED = PersistentServiceActions.LOCK_SCREEN_CANCELLED
 
-        const val PERSISTENT_NOTIFICATION_ID = 17
+        const val FOREGROUND_NOTIFICATION_ID = 17
         private const val START_IN_FLIGHT_RESET_MS = 8_000L
 
         fun start(context: Context) {
             val appContext = context.applicationContext
             stopRequested.set(false)
-            val intent = Intent(appContext, PersistentNotificationService::class.java).apply { action = ACTION_START }
+            val intent = Intent(appContext, AppBackgroundRuntimeService::class.java).apply { action = ACTION_START }
             if (_isRunning.get()) {
                 sendCommandBroadcast(appContext, ACTION_START)
                 return
@@ -140,7 +137,7 @@ class PersistentNotificationService : Service() {
             val appContext = context.applicationContext
             stopRequested.set(false)
             val intent =
-                Intent(appContext, PersistentNotificationService::class.java).apply {
+                Intent(appContext, AppBackgroundRuntimeService::class.java).apply {
                     action = ACTION_ENABLE_MONITORING
                 }
             if (_isRunning.get()) {
@@ -162,19 +159,9 @@ class PersistentNotificationService : Service() {
             sendCommandBroadcast(appContext, ACTION_STOP_SERVICE)
             if (_isRunning.get()) {
                 runCatching {
-                    appContext.stopService(Intent(appContext, PersistentNotificationService::class.java))
+                    appContext.stopService(Intent(appContext, AppBackgroundRuntimeService::class.java))
                 }
             }
-        }
-
-        fun setAppInForeground(inForeground: Boolean) {
-            appInForeground.set(inForeground)
-        }
-
-        fun notifyAppBackground(context: Context) {
-            val appContext = context.applicationContext
-            appInForeground.set(false)
-            sendCommandBroadcast(appContext, ACTION_APP_BACKGROUND)
         }
 
         private fun startForegroundCompat(

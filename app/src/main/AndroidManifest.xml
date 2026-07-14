@@ -59,7 +59,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name="com.quickcleanpro.phonecleaner.feature.notificationcleaner.logic.QuickCleanPRONotificationListener"
+            android:name="com.quickcleanpro.phonecleaner.feature.notificationcleaner.QuickCleanPRONotificationListener"
             android:exported="true"
             android:label="@string/app_name"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
@@ -68,16 +68,16 @@
             </intent-filter>
         </service>
         <service
-            android:name="com.quickcleanpro.phonecleaner.app.runtime.notification.PersistentNotificationService"
+            android:name="com.quickcleanpro.phonecleaner.app.runtime.notification.AppBackgroundRuntimeService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Keeps Quick Clean PRO tools available in notifications, samples local battery history for Battery Info charts, and monitors user-selected protected apps for App Lock." />
+                android:value="Samples local battery history for Battery Info charts and monitors user-selected protected apps for App Lock." />
         </service>
         <service
-            android:name="com.quickcleanpro.phonecleaner.feature.applock.logic.service.LockScreenOverlayService"
+            android:name="com.quickcleanpro.phonecleaner.feature.applock.service.LockScreenOverlayService"
             android:enabled="true"
             android:exported="false" />
         <meta-data

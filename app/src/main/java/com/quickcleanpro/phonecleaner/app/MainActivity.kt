@@ -8,14 +8,14 @@ import com.quickcleanpro.phonecleaner.common.ads.AdvertiseSdkAdapter
 import com.quickcleanpro.phonecleaner.common.analytics.AnalyticsTracker
 import com.quickcleanpro.phonecleaner.app.runtime.startup.AppLaunchCoordinator
 import com.quickcleanpro.phonecleaner.app.AppConfig
-import com.quickcleanpro.phonecleaner.app.runtime.notification.ToolNotificationIntentFactory
+import com.quickcleanpro.phonecleaner.app.runtime.notification.NotificationIntentRouteResolver
 import com.quickcleanpro.phonecleaner.common.ui.theme.QuickCleanProAppTheme
 import com.quickcleanpro.phonecleaner.app.AppRoot
 
 class MainActivity : AppCompatActivity() {
     private val launchCoordinator =
         AppLaunchCoordinator(
-            targetRouteResolver = ToolNotificationIntentFactory::targetRoute,
+            targetRouteResolver = NotificationIntentRouteResolver::targetRoute,
         )
 
     override fun onCreate(savedInstanceState: Bundle?) {

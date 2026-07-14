@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Quick Clean PRO</string>
     <string name="app_lock_usage_permission_desc">Locate Quick Clean PRO and toggle on permission.</string>
     <string name="app_lock_overlay_permission_desc">Locate Quick Clean PRO and toggle on permission.</string>
     <string name="permission_usage_desc">To show app usage details, please allow Quick Clean PRO in Usage Access settings.</string>

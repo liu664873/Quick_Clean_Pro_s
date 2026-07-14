@@ -5,7 +5,6 @@ import com.quickcleanpro.phonecleaner.app.navigation.AppNavigator
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.quickcleanpro.phonecleaner.app.runtime.notification.ToolNotificationIntentFactory
 import com.quickcleanpro.phonecleaner.feature.home.HomeRoute
 import com.quickcleanpro.phonecleaner.feature.home.HomeViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -22,7 +21,7 @@ internal fun NavGraphBuilder.registerHomeRoutes(
             externalBlockingPromptActive = externalBlockingPromptActive,
         )
     }
-    composable(ToolNotificationIntentFactory.ROUTE_HOME_FILE_MANAGER) {
+    composable(AppDestination.HomeFileManager.route) {
         val viewModel: HomeViewModel = koinViewModel()
         HomeRoute(
             navigator = navigator,
@@ -31,7 +30,7 @@ internal fun NavGraphBuilder.registerHomeRoutes(
             initialTabIndex = 1,
         )
     }
-    composable(ToolNotificationIntentFactory.ROUTE_HOME_TOOLBOX) {
+    composable(AppDestination.HomeToolbox.route) {
         val viewModel: HomeViewModel = koinViewModel()
         HomeRoute(
             navigator = navigator,

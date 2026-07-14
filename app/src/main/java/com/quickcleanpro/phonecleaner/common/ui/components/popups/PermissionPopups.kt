@@ -91,7 +91,7 @@ fun CleanXPermissionRequiredDialog(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "閴?" + stringResource(copy.titleRes),
+                text = "✨ " + stringResource(copy.titleRes),
                 color = CleanXText,
                 fontSize = 17.sp,
                 lineHeight = 21.sp,

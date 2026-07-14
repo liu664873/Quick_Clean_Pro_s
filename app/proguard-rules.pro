@@ -66,7 +66,6 @@
 -keep class **.use.core.ads.AdAreaKeys { *; }
 -keep class **.use.core.ads.AdAreaKeys$* { *; }
 -keep class **.use.core.navigation.NotificationRouteAliases { *; }
--keep class **.use.service.notification.ToolNotificationIntentFactory { *; }
 
 # Local Trustlook cloud scan AAR. Keep conservatively because it is a binary SDK.
 -keep class com.trustlook.** { *; }

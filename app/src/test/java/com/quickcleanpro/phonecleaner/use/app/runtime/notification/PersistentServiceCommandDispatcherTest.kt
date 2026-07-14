@@ -17,8 +17,6 @@ class PersistentServiceCommandDispatcherTest {
                 PersistentServiceActions.START to PersistentServiceCommand.Start,
                 PersistentServiceActions.ENABLE_MONITORING to PersistentServiceCommand.EnableMonitoring,
                 PersistentServiceActions.DISABLE_MONITORING to PersistentServiceCommand.DisableMonitoring,
-                PersistentServiceActions.APP_FOREGROUND to PersistentServiceCommand.AppForeground,
-                PersistentServiceActions.APP_BACKGROUND to PersistentServiceCommand.AppBackground,
                 PersistentServiceActions.RESTORE_NOTIFICATION to PersistentServiceCommand.RestoreNotification,
                 PersistentServiceActions.STOP_SERVICE to PersistentServiceCommand.StopService,
                 PersistentServiceActions.PASSWORD_SUCCESS to PersistentServiceCommand.DismissLockScreen,
@@ -36,13 +34,11 @@ class PersistentServiceCommandDispatcherTest {
     fun `dispatcher delegates every command once`() {
         val appLock = RecordingAppLockActions()
         val notification = RecordingNotificationActions()
-        val foregroundValues = mutableListOf<Boolean>()
         var stopCalls = 0
         val dispatcher =
             PersistentServiceCommandDispatcher(
                 appLock = appLock,
                 notification = notification,
-                setAppInForeground = foregroundValues::add,
                 stopService = { stopCalls += 1 },
             )
 
@@ -53,7 +49,6 @@ class PersistentServiceCommandDispatcherTest {
             appLock.calls,
         )
         assertEquals(1, notification.restoreCalls)
-        assertEquals(listOf(true, false), foregroundValues)
         assertEquals(1, stopCalls)
     }
 

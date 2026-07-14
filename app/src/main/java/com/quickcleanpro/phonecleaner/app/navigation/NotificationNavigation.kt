@@ -3,7 +3,6 @@ package com.quickcleanpro.phonecleaner.app.navigation
 import androidx.navigation.NavHostController
 import com.quickcleanpro.phonecleaner.common.ads.InterstitialAdRunner
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
-import com.quickcleanpro.phonecleaner.app.runtime.notification.ToolNotificationIntentFactory
 
 internal fun NavHostController.navigateToNotificationTarget(
     route: String,
@@ -13,7 +12,7 @@ internal fun NavHostController.navigateToNotificationTarget(
     val navigateToTarget = {
         navigateToNotificationTargetNow(route)
     }
-    if (route == AppDestination.Home.route || route in ToolNotificationIntentFactory.homeTabRoutes) {
+    if (route in AppDestination.homeRoutes) {
         navigateToTarget()
         return
     }
@@ -29,7 +28,7 @@ private fun NavHostController.navigateToNotificationTargetNow(route: String) {
         // Clear the existing stack before rebuilding Home -> target.
     }
     val currentRoute = currentDestination?.route
-    if (route in ToolNotificationIntentFactory.homeTabRoutes) {
+    if (route in AppDestination.homeRoutes && route != AppDestination.Home.route) {
         navigate(route) {
             currentRoute?.let { popUpTo(it) { inclusive = true } }
             launchSingleTop = true

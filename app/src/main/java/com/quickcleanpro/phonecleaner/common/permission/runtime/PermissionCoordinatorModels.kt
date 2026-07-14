@@ -1,9 +1,8 @@
 package com.quickcleanpro.phonecleaner.common.permission.runtime
 
-import com.quickcleanpro.phonecleaner.common.permission.PermissionType
-
 import com.quickcleanpro.phonecleaner.common.permission.PermissionRequestTarget
 import com.quickcleanpro.phonecleaner.common.permission.PermissionStatus
+import com.quickcleanpro.phonecleaner.common.permission.PermissionType
 
 internal data class PermissionSession(
     val target: PermissionRequestTarget,
@@ -59,4 +58,3 @@ internal fun resolvePermissionRecheck(
         PermissionRecheckDecision.Denied
     }
 }
-

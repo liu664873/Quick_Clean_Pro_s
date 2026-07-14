@@ -26,8 +26,6 @@ internal class PersistentServiceCommandReceiver(
                 addAction(PersistentServiceActions.START)
                 addAction(PersistentServiceActions.ENABLE_MONITORING)
                 addAction(PersistentServiceActions.DISABLE_MONITORING)
-                addAction(PersistentServiceActions.APP_FOREGROUND)
-                addAction(PersistentServiceActions.APP_BACKGROUND)
                 addAction(PersistentServiceActions.RESTORE_NOTIFICATION)
                 addAction(PersistentServiceActions.STOP_SERVICE)
                 addAction(PersistentServiceActions.PASSWORD_SUCCESS)
