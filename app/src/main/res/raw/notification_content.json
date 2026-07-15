@@ -908,40 +908,5 @@
     "Button": "Check",
     "Languages": "{\"keys\":[{\"language\":\"es\",\"title\":\"¿Intentas llegar con batería hasta la noche?\",\"content\":\"Mira cómo va antes de que el nivel baje demasiado.\",\"img\":\"\",\"button\":\"Ver\"}]}",
     "Route": "/checkBatteryInfo"
-  },
-  {
-    "Title": "Large Files Taking Space?",
-    "Content": "Review big files and clear room for what matters.",
-    "Button": "Check",
-    "Languages": "{\"keys\":[]}",
-    "Route": "/largeFileManager"
-  },
-  {
-    "Title": "Old Downloads Left Behind?",
-    "Content": "Some large files may still be sitting in storage.",
-    "Button": "Review",
-    "Languages": "{\"keys\":[]}",
-    "Route": "/largeFileManager"
-  },
-  {
-    "Title": "Need More Free Space?",
-    "Content": "A quick large-file check could help you clean faster.",
-    "Button": "Open",
-    "Languages": "{\"keys\":[]}",
-    "Route": "/largeFileManager"
-  },
-  {
-    "Title": "Files Cleaned?",
-    "Content": "There may be more large files worth reviewing.",
-    "Button": "Check",
-    "Languages": "{\"keys\":[]}",
-    "Route": "/largeFileManager"
-  },
-  {
-    "Title": "Storage Still Feels Full?",
-    "Content": "Large files can hide in plain sight. Take a quick look.",
-    "Button": "Review",
-    "Languages": "{\"keys\":[]}",
-    "Route": "/largeFileManager"
   }
 ]

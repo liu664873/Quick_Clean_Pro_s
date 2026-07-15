@@ -58,6 +58,7 @@ class MyApp : Application() {
                     }
                 },
                 notificationDefaultsInitializer = {
+                    AdvertiseSdkAdapter.awaitRemoteConfigInitialization()
                     withContext(Dispatchers.Main.immediate) {
                         loadSdkNotificationDefaultsIfNeeded()
                     }
@@ -73,6 +74,8 @@ class MyApp : Application() {
     }
 
     private fun loadSdkNotificationDefaultsIfNeeded() {
+        if (AdvertiseSdkAdapter.hasNotificationContent()) return
+
         resources.openRawResource(R.raw.notification_content)
             .bufferedReader()
             .use { it.readText() }

@@ -5,6 +5,9 @@ import android.app.Application
 import android.content.Context
 import com.pdffox.adv.AdvertiseSdk
 import com.pdffox.adv.notification.NotificationManager as AdvertiseNotificationManager
+import kotlin.coroutines.resume
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 
 object AdvertiseSdkAdapter {
     suspend fun initialize(
@@ -79,6 +82,21 @@ object AdvertiseSdkAdapter {
         AdvertiseNotificationManager.updateNotificationContent(content)
     }
 
+    suspend fun awaitRemoteConfigInitialization(timeoutMillis: Long = REMOTE_CONFIG_WAIT_MS) {
+        withTimeoutOrNull(timeoutMillis) {
+            suspendCancellableCoroutine { continuation ->
+                AdvertiseSdk.getRemoteConfigInitStatus { _, _, _ ->
+                    if (continuation.isActive) {
+                        continuation.resume(Unit)
+                    }
+                }
+            }
+        }
+    }
+
+    fun hasNotificationContent(): Boolean =
+        !AdvertiseNotificationManager.notificationContents.isNullOrEmpty()
+
     fun isAppOpenEnabled(): Boolean = AdvertiseSdk.isAppOpenAdEnabled
 
     fun setAppOpenEnabled(enabled: Boolean) {
@@ -102,4 +120,6 @@ object AdvertiseSdkAdapter {
             AdvertiseSdk.preloadInterstitial(appContext, loadTimeKey)
         }
     }
+
+    private const val REMOTE_CONFIG_WAIT_MS = 6_500L
 }
