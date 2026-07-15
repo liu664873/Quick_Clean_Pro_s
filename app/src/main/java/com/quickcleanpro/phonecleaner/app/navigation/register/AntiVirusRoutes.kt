@@ -1,10 +1,12 @@
-package com.quickcleanpro.phonecleaner.app.navigation
+package com.quickcleanpro.phonecleaner.app.navigation.register
 
 import androidx.compose.runtime.remember
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
+import com.quickcleanpro.phonecleaner.app.navigation.AppNavigator
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureFlowRuntime
 import com.quickcleanpro.phonecleaner.app.runtime.external.ExternalActivityLauncher
 import com.quickcleanpro.phonecleaner.feature.antivirus.AntiVirusRoute

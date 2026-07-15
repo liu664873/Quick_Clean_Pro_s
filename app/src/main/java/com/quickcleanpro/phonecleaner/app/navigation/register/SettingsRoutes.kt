@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.app.navigation
+package com.quickcleanpro.phonecleaner.app.navigation.register
 
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
 import com.quickcleanpro.phonecleaner.app.navigation.AppNavigator

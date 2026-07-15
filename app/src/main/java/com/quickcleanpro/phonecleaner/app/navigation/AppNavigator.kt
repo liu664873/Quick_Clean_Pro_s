@@ -17,6 +17,14 @@ interface AppNavigator {
 
     fun resetTo(destination: AppDestination)
 
+    fun resetToRoute(route: String) {
+        AppDestination.forRoute(route)?.let(::resetTo) ?: openRoute(route)
+    }
+
+    fun openNotificationTarget(route: String) {
+        resetToRoute(route)
+    }
+
     fun home()
 
     fun back(): Boolean
@@ -53,6 +61,29 @@ class NavHostControllerAppNavigator(
             navigateHomeClearingStack()
             if (destination.route !in AppDestination.homeRoutes) {
                 navController.navigate(destination.route) { launchSingleTop = true }
+            }
+        }
+    }
+
+    override fun resetToRoute(route: String) {
+        runCatching {
+            while (navController.popBackStack()) {
+                // Clear the stack before rebuilding Home -> target.
+            }
+            val current = navController.currentDestination?.route
+            if (route in AppDestination.homeRoutes && route != AppDestination.Home.route) {
+                navController.navigate(route) {
+                    current?.let { popUpTo(it) { inclusive = true } }
+                    launchSingleTop = true
+                }
+                return@runCatching
+            }
+            navController.navigate(AppDestination.Home.route) {
+                current?.let { popUpTo(it) { inclusive = true } }
+                launchSingleTop = true
+            }
+            if (route != AppDestination.Home.route) {
+                navController.navigate(route) { launchSingleTop = true }
             }
         }
     }

@@ -9,7 +9,7 @@ import com.quickcleanpro.phonecleaner.feature.files.shared.*
 import androidx.compose.runtime.Composable
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureFlowRuntime
 import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
-import com.quickcleanpro.phonecleaner.common.permission.CleanXPermissionCoordinator
+import com.quickcleanpro.phonecleaner.common.permission.AppPermissionCoordinator
 import com.quickcleanpro.phonecleaner.feature.files.shared.BaseFileManagerViewModel
 import com.quickcleanpro.phonecleaner.feature.files.shared.FileUri
 import com.quickcleanpro.phonecleaner.feature.files.shared.FileOperationPhase
@@ -28,7 +28,7 @@ import com.quickcleanpro.phonecleaner.app.navigation.AppNavigator
 internal fun FileManagerFlowEffects(
     viewModel: BaseFileManagerViewModel,
     featureFlow: FeatureFlowRuntime,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     feature: FeatureKey,
     permissionState: FileManagerPermissionState,
     errorMessage: String?,
@@ -56,7 +56,7 @@ internal fun FileManagerFlowDialogs(
     permissionState: FileManagerPermissionState,
     router: AppNavigator,
     featureFlow: FeatureFlowRuntime,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     feature: FeatureKey,
     phase: FileOperationPhase,
     deleteDialogVisible: Boolean,

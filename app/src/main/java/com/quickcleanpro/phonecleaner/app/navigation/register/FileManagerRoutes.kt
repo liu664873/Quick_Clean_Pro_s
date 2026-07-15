@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.app.navigation
+package com.quickcleanpro.phonecleaner.app.navigation.register
 
 import androidx.compose.runtime.remember
 import androidx.navigation.NavBackStackEntry

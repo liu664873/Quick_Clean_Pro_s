@@ -14,7 +14,7 @@ import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureOperationEv
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureExitReason
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureFlowRuntime
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.OperationAction
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
 import com.quickcleanpro.phonecleaner.common.permission.ui.LocalPermissionCoordinator
 import com.quickcleanpro.phonecleaner.feature.notificationcleaner.NotificationCleanerAction
 import com.quickcleanpro.phonecleaner.feature.notificationcleaner.NotificationCleanerViewModel
@@ -66,7 +66,7 @@ fun NotificationCleanerRoute(
                     }
                 }
                 NotificationCleanerAction.EnableBlocking -> {
-                    permissionCoordinator.guard(CleanXProtectedAction.NotificationCleanerEnable) {
+                    permissionCoordinator.ensure(ProtectedAction.NotificationCleanerEnable) {
                         viewModel.onAction(action)
                     }
                 }

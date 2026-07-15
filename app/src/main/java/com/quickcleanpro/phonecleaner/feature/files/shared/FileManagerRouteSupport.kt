@@ -30,8 +30,8 @@ import com.quickcleanpro.phonecleaner.common.ui.components.CleanXScaffoldPage
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.DeleteConfirmDialog
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.NoResultsDialog
 import com.quickcleanpro.phonecleaner.common.ui.components.popups.StopScanDialog
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
-import com.quickcleanpro.phonecleaner.common.permission.CleanXPermissionCoordinator
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.AppPermissionCoordinator
 import com.quickcleanpro.phonecleaner.common.permission.ui.rememberPermissionGranted
 import com.quickcleanpro.phonecleaner.app.navigation.AppNavigator
 import com.quickcleanpro.phonecleaner.feature.files.shared.BaseFileManagerViewModel
@@ -176,7 +176,7 @@ internal fun FileManagerErrorToastEffect(
 internal fun FileManagerStartEffect(
     feature: FeatureKey,
     permissionState: FileManagerPermissionState,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     featureFlow: FeatureFlowRuntime,
     onStartIfNeeded: () -> Unit,
     onPermissionRejected: () -> Unit,
@@ -189,13 +189,13 @@ internal fun FileManagerStartEffect(
             latestStartIfNeeded()
             return@LaunchedEffect
         }
-        permissionCoordinator.guard(
-            action = CleanXProtectedAction.FileManagerLoadFiles,
+        permissionCoordinator.ensure(
+            action = ProtectedAction.FileManagerLoadFiles,
             onGranted = {
                 permissionState.onPermissionChanged(true)
                 latestStartIfNeeded()
             },
-            onRejected = {
+            onDenied = {
                 featureFlow.exit(feature, FeatureExitReason.PermissionRejected) {
                     latestPermissionRejected()
                 }
@@ -224,7 +224,7 @@ internal fun FileManagerDeleteConfirmDialog(
     visible: Boolean,
     permissionGranted: Boolean,
     selectedUris: List<FileUri>,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     onCancel: () -> Unit,
     onBeforeDeleteRequest: () -> Unit = {},
     onDeleteReady: () -> Unit,
@@ -239,7 +239,7 @@ internal fun FileManagerDeleteConfirmDialog(
         DeleteConfirmDialog(
             onCancel = onCancel,
             onDelete = {
-                permissionCoordinator.guard(CleanXProtectedAction.FileManagerDeleteFiles) {
+                permissionCoordinator.ensure(ProtectedAction.FileManagerDeleteFiles) {
                     onBeforeDeleteRequest()
                     requestMediaStoreDeleteOrDeleteDirectly(
                         context = context,

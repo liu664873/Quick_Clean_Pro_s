@@ -62,7 +62,7 @@ import com.quickcleanpro.phonecleaner.feature.notificationcleaner.ui.Notificatio
 import com.quickcleanpro.phonecleaner.common.ui.components.popups.StopScanDialog
 import com.quickcleanpro.phonecleaner.feature.toolbox.shared.ui.ToolboxScanningContent
 import com.quickcleanpro.phonecleaner.common.ui.theme.CleanXBlue
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
 import com.quickcleanpro.phonecleaner.feature.notificationcleaner.NotificationCleanerPage
 import com.quickcleanpro.phonecleaner.feature.notificationcleaner.NotificationCleanerUiState

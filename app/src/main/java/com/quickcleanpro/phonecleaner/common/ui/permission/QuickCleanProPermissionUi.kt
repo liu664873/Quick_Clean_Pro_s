@@ -5,11 +5,11 @@ import com.quickcleanpro.phonecleaner.common.permission.PermissionType
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import com.quickcleanpro.phonecleaner.R
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
 import com.quickcleanpro.phonecleaner.common.permission.PermissionPromptRequest
-import com.quickcleanpro.phonecleaner.common.permission.PermissionRequestTarget
-import com.quickcleanpro.phonecleaner.common.ui.components.popups.CleanXPermissionCopy
-import com.quickcleanpro.phonecleaner.common.ui.components.popups.CleanXPermissionRequiredDialog
+import com.quickcleanpro.phonecleaner.common.permission.PermissionTarget
+import com.quickcleanpro.phonecleaner.common.ui.components.popups.PermissionCopy
+import com.quickcleanpro.phonecleaner.common.ui.components.popups.PermissionRequiredDialog
 import com.quickcleanpro.phonecleaner.common.ui.components.popups.InlinePermissionOverlay
 
 object QuickCleanProPermissionUi {
@@ -43,7 +43,7 @@ object QuickCleanProPermissionUi {
             else -> {
                 BackHandler { onDismiss() }
                 InlinePermissionOverlay(onDismiss = onDismiss) {
-                    CleanXPermissionRequiredDialog(
+                    PermissionRequiredDialog(
                         copy = request.copyForQuickCleanPRO(),
                         onSubmit = onSubmit,
                         onCancel = onDismiss,
@@ -55,152 +55,104 @@ object QuickCleanProPermissionUi {
 }
 
 private fun PermissionPromptRequest.isNotificationCleanerEnableGuideRequest(): Boolean {
-    val requestTarget = target as? PermissionRequestTarget.Action ?: return false
-    return requestTarget.action == CleanXProtectedAction.NotificationCleanerEnable &&
+    val requestTarget = target as? PermissionTarget.Action ?: return false
+    return requestTarget.action == ProtectedAction.NotificationCleanerEnable &&
         missingPermission?.key == PermissionType.NotificationListener.key
 }
 
-private fun PermissionPromptRequest.copyForQuickCleanPRO(): CleanXPermissionCopy =
+private fun PermissionPromptRequest.copyForQuickCleanPRO(): PermissionCopy =
     when (val requestTarget = target) {
-        is PermissionRequestTarget.Action ->
-            copyFor(requestTarget.action, missingPermission?.key)
-        is PermissionRequestTarget.Item ->
-            copyFor(requestTarget.item, missingPermission?.key)
+        is PermissionTarget.Action ->
+            copyFor(requestTarget.action, requireNotNull(missingPermission))
+        is PermissionTarget.Permission ->
+            copyFor(requestTarget.permission)
     }
 
-private fun copyFor(
-    item: PermissionType,
-    missingPermissionKey: String?,
-): CleanXPermissionCopy {
-    if (missingPermissionKey == PermissionType.Overlay.key) {
-        return overlayCopy()
-    }
-    if (missingPermissionKey == PermissionType.PostNotifications.key) {
-        return postNotificationsCopy()
-    }
+private fun copyFor(item: PermissionType): PermissionCopy {
     val titleRes = R.string.permission_title_required
     val noPersonalRes = R.string.permission_hint_no_personal
     return when (item) {
-        PermissionType.StorageFiles,
-        PermissionType.MediaImages,
-        PermissionType.MediaImagesWithLocation,
-        PermissionType.MediaVideo,
-        PermissionType.MediaAudio,
-        -> CleanXPermissionCopy(
+        PermissionType.StorageFiles -> PermissionCopy(
             titleRes = titleRes,
             descriptionRes = R.string.permission_storage_files_desc,
             hint1Res = R.string.permission_hint_files_safe,
             hint2Res = noPersonalRes,
         )
-        PermissionType.Location -> CleanXPermissionCopy(
+        PermissionType.Location -> PermissionCopy(
             titleRes = titleRes,
             descriptionRes = R.string.permission_location_desc,
             hint1Res = R.string.permission_hint_network_scan,
             hint2Res = noPersonalRes,
         )
-        PermissionType.UsageAccess -> CleanXPermissionCopy(
+        PermissionType.UsageAccess -> PermissionCopy(
             titleRes = titleRes,
             descriptionRes = R.string.permission_usage_desc,
             hint1Res = R.string.permission_hint_usage_read,
             hint2Res = noPersonalRes,
         )
-        PermissionType.NotificationListener -> CleanXPermissionCopy(
+        PermissionType.NotificationListener -> PermissionCopy(
             titleRes = titleRes,
             descriptionRes = R.string.permission_notification_desc,
             hint1Res = R.string.permission_hint_notifications,
             hint2Res = noPersonalRes,
         )
         PermissionType.Overlay -> overlayCopy()
-        PermissionType.PostNotifications -> postNotificationsCopy()
     }
 }
 
 private fun copyFor(
-    action: CleanXProtectedAction,
-    missingPermissionKey: String?,
-): CleanXPermissionCopy {
-    if (missingPermissionKey == PermissionType.Overlay.key) {
-        return overlayCopy()
-    }
-    if (missingPermissionKey == PermissionType.PostNotifications.key) {
-        return postNotificationsCopy()
-    }
+    action: ProtectedAction,
+    missingPermission: PermissionType,
+): PermissionCopy {
+    if (missingPermission == PermissionType.Overlay) return overlayCopy()
     val titleRes = R.string.permission_title_required
     val noPersonalRes = R.string.permission_hint_no_personal
     return when (action) {
-        CleanXProtectedAction.JunkStartScan,
-        CleanXProtectedAction.JunkCleanSelected,
-        -> CleanXPermissionCopy(
+        ProtectedAction.JunkStartScan,
+        ProtectedAction.JunkCleanSelected,
+        -> PermissionCopy(
             titleRes = titleRes,
             descriptionRes = R.string.permission_storage_desc,
             hint1Res = R.string.permission_hint_junk_deleted,
             hint2Res = noPersonalRes,
         )
-        CleanXProtectedAction.VirusDeepScanStart -> CleanXPermissionCopy(
+        ProtectedAction.VirusDeepScanStart -> PermissionCopy(
             titleRes = titleRes,
             descriptionRes = R.string.permission_virus_storage_desc,
             hint1Res = R.string.permission_hint_threat_files,
             hint2Res = noPersonalRes,
         )
-        CleanXProtectedAction.WhatsAppStartScan,
-        CleanXProtectedAction.WhatsAppCleanSelected,
-        -> CleanXPermissionCopy(
+        ProtectedAction.WhatsAppStartScan,
+        ProtectedAction.WhatsAppCleanSelected,
+        -> PermissionCopy(
             titleRes = titleRes,
             descriptionRes = R.string.permission_whatsapp_storage_desc,
             hint1Res = R.string.permission_hint_whatsapp_files,
             hint2Res = noPersonalRes,
         )
-        CleanXProtectedAction.NetworkUsageLoadStats -> CleanXPermissionCopy(
+        ProtectedAction.NetworkUsageLoadStats -> PermissionCopy(
             titleRes = titleRes,
             descriptionRes = R.string.permission_network_usage_desc,
             hint1Res = R.string.permission_hint_usage_read,
             hint2Res = noPersonalRes,
         )
-        CleanXProtectedAction.AppLockOpenProtectedArea,
-        CleanXProtectedAction.AppLockEnableMonitoring,
-        -> CleanXPermissionCopy(
+        ProtectedAction.AppLockOpenProtectedArea,
+        ProtectedAction.AppLockEnableMonitoring,
+        -> PermissionCopy(
             titleRes = titleRes,
             descriptionRes = R.string.permission_app_lock_usage_desc,
             hint1Res = R.string.permission_hint_usage_read,
             hint2Res = noPersonalRes,
         )
-        else -> copyFor(itemForAction(action), missingPermissionKey)
+        else -> copyFor(missingPermission)
     }
 }
 
-private fun itemForAction(action: CleanXProtectedAction): PermissionType =
-    when (action) {
-        CleanXProtectedAction.JunkStartScan,
-        CleanXProtectedAction.JunkCleanSelected,
-        CleanXProtectedAction.FileManagerLoadFiles,
-        CleanXProtectedAction.FileManagerDeleteFiles,
-        CleanXProtectedAction.WhatsAppStartScan,
-        CleanXProtectedAction.WhatsAppCleanSelected,
-        CleanXProtectedAction.VirusDeepScanStart,
-        -> PermissionType.StorageFiles
-        CleanXProtectedAction.NetworkScanStart -> PermissionType.Location
-        CleanXProtectedAction.AppUsageLoadStats,
-        CleanXProtectedAction.NetworkUsageLoadStats,
-        CleanXProtectedAction.AppLockOpenProtectedArea,
-        CleanXProtectedAction.AppLockEnableMonitoring,
-            -> PermissionType.UsageAccess
-        CleanXProtectedAction.NotificationCleanerEnable -> PermissionType.NotificationListener
-        CleanXProtectedAction.AppLockRequestOverlay -> PermissionType.Overlay
-        CleanXProtectedAction.PostNotificationsEnable -> PermissionType.PostNotifications
-    }
-
-private fun overlayCopy(): CleanXPermissionCopy =
-    CleanXPermissionCopy(
+private fun overlayCopy(): PermissionCopy =
+    PermissionCopy(
         titleRes = R.string.permission_title_required,
         descriptionRes = R.string.permission_overlay_desc,
         hint1Res = R.string.permission_hint_overlay,
         hint2Res = R.string.permission_hint_no_personal,
     )
 
-private fun postNotificationsCopy(): CleanXPermissionCopy =
-    CleanXPermissionCopy(
-        titleRes = R.string.permission_title_required,
-        descriptionRes = R.string.permission_post_notifications_desc,
-        hint1Res = R.string.permission_hint_app_notifications,
-        hint2Res = R.string.permission_hint_no_personal,
-    )

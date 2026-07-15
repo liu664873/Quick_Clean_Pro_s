@@ -23,12 +23,12 @@ import com.quickcleanpro.phonecleaner.feature.files.similarphotos.SimilarPhotosM
 import com.quickcleanpro.phonecleaner.feature.files.videos.VideosManagerViewModel
 import com.quickcleanpro.phonecleaner.feature.files.shared.rememberFileManagerPermissionState
 import com.quickcleanpro.phonecleaner.app.navigation.AppNavigator
-import com.quickcleanpro.phonecleaner.common.permission.CleanXPermissionCoordinator
+import com.quickcleanpro.phonecleaner.common.permission.AppPermissionCoordinator
 
 @Composable
 internal fun PhotosFileDetailRoute(
     navigator: AppNavigator,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     viewModel: PhotosManagerViewModel,
     initialIndex: Int,
 ) {
@@ -57,7 +57,7 @@ internal fun PhotosFileDetailRoute(
 @Composable
 internal fun SimilarPhotosFileDetailRoute(
     navigator: AppNavigator,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     viewModel: SimilarPhotosManagerViewModel,
     initialIndex: Int,
 ) {
@@ -86,7 +86,7 @@ internal fun SimilarPhotosFileDetailRoute(
 @Composable
 internal fun ScreenshotsFileDetailRoute(
     navigator: AppNavigator,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     viewModel: ScreenshotsManagerViewModel,
     initialIndex: Int,
 ) {
@@ -115,7 +115,7 @@ internal fun ScreenshotsFileDetailRoute(
 @Composable
 internal fun VideosFileDetailRoute(
     navigator: AppNavigator,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     viewModel: VideosManagerViewModel,
     initialIndex: Int,
 ) {
@@ -144,7 +144,7 @@ internal fun VideosFileDetailRoute(
 @Composable
 internal fun AudiosFileDetailRoute(
     navigator: AppNavigator,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     viewModel: AudiosManagerViewModel,
     initialIndex: Int,
 ) {
@@ -173,7 +173,7 @@ internal fun AudiosFileDetailRoute(
 @Composable
 internal fun LargeFilesFileDetailRoute(
     navigator: AppNavigator,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     viewModel: LargeFilesManagerViewModel,
     initialIndex: Int,
 ) {
@@ -202,7 +202,7 @@ internal fun LargeFilesFileDetailRoute(
 @Composable
 internal fun DocumentsFileDetailRoute(
     navigator: AppNavigator,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     viewModel: DocumentsManagerViewModel,
     initialIndex: Int,
 ) {
@@ -231,7 +231,7 @@ internal fun DocumentsFileDetailRoute(
 @Composable
 private fun FileDetailRoute(
     navigator: AppNavigator,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     uiState: FileDetailUiState,
     onRequestDelete: () -> Unit,
     onCancelDelete: () -> Unit,

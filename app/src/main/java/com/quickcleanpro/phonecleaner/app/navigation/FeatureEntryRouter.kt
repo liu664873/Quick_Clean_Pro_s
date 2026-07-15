@@ -20,6 +20,23 @@ class FeatureEntryRouter(
         }
     }
 
+    override fun openNotificationTarget(route: String) {
+        val fromRoute =
+            navigator.currentRoute?.takeUnless {
+                it == AppDestination.Splash.route || it == AppDestination.OnboardingScan.route
+            }
+        val openTarget = { navigator.openNotificationTarget(route) }
+        if (route in AppDestination.homeRoutes) {
+            openTarget()
+            return
+        }
+        interstitialAds.runRouteEntry(
+            fromRoute = fromRoute,
+            targetRoute = route,
+            onContinue = openTarget,
+        )
+    }
+
     private fun openAfterEntryAd(destination: AppDestination, finalRoute: String) {
         interstitialAds.runRouteEntry(
             fromRoute = navigator.currentRoute,

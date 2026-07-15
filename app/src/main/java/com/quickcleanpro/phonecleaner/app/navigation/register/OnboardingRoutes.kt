@@ -1,7 +1,9 @@
-package com.quickcleanpro.phonecleaner.app.navigation
+package com.quickcleanpro.phonecleaner.app.navigation.register
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
+import com.quickcleanpro.phonecleaner.app.navigation.AppNavigator
 import com.quickcleanpro.phonecleaner.common.ads.AdRuntime
 import com.quickcleanpro.phonecleaner.feature.onboarding.OnboardingRoute
 import com.quickcleanpro.phonecleaner.feature.onboarding.OnboardingScanViewModel

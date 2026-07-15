@@ -12,7 +12,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.quickcleanpro.phonecleaner.common.ads.AdRuntimeState
-import com.quickcleanpro.phonecleaner.common.permission.NotificationRuntimePermissionController
 import com.quickcleanpro.phonecleaner.app.runtime.startup.AppLaunchCoordinator
 import com.quickcleanpro.phonecleaner.app.navigation.AppNavGraph
 import com.quickcleanpro.phonecleaner.app.runtime.AppSessionCoordinator
@@ -54,10 +53,6 @@ fun AppRoot(
                 ),
             sessionCoordinator = sessionCoordinator,
         )
-    val notificationPermissionController = remember(context, runtimeBindings.externalActivities) {
-        NotificationRuntimePermissionController(context, runtimeBindings.externalActivities)
-    }
-
     AdRuntimeLifecycleEffect(lifecycleOwner, runtimeBindings.ads)
     RouteAnalyticsEffect(currentRoute, context, runtimeBindings.ads)
 
@@ -78,7 +73,7 @@ fun AppRoot(
         NotificationPermissionHost(
             viewModel = notificationPermissionViewModel,
             currentRoute = currentRoute,
-            permissionController = notificationPermissionController,
+            externalActivityLauncher = runtimeBindings.externalActivities,
             onPermissionGranted = onNotificationPermissionGranted,
         )
         NotificationLaunchEffect(pendingRequest, currentRoute, navController)

@@ -72,8 +72,8 @@ fun InlinePermissionOverlay(
 }
 
 @Composable
-fun CleanXPermissionRequiredDialog(
-    copy: CleanXPermissionCopy,
+fun PermissionRequiredDialog(
+    copy: PermissionCopy,
     onSubmit: () -> Unit,
     onCancel: () -> Unit,
     modifier: Modifier = Modifier,

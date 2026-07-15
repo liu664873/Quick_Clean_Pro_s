@@ -1,7 +1,7 @@
 package com.quickcleanpro.phonecleaner.common.permission.ui
 
 import androidx.compose.runtime.staticCompositionLocalOf
-import com.quickcleanpro.phonecleaner.common.permission.CleanXPermissionCoordinator
+import com.quickcleanpro.phonecleaner.common.permission.AppPermissionCoordinator
 
 val LocalPermissionCoordinator =
-    staticCompositionLocalOf<CleanXPermissionCoordinator> { error("Permission coordinator is not available") }
+    staticCompositionLocalOf<AppPermissionCoordinator> { error("Permission coordinator is not available") }

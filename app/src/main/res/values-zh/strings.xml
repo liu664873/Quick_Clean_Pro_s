@@ -164,9 +164,6 @@
     <string name="permission_storage_files_desc">为了扫描和管理文件，请授予手机文件和媒体访问权限。</string>
     <string name="permission_virus_storage_desc">为了扫描文件风险，请授予手机文件和媒体访问权限。</string>
     <string name="permission_whatsapp_storage_desc">为了扫描并清理 WhatsApp 文件，请授予手机文件和媒体访问权限。</string>
-    <string name="permission_media_images_desc">为了扫描和管理照片，请授予图片和媒体访问权限。</string>
-    <string name="permission_media_video_desc">为了扫描和管理视频，请授予视频媒体访问权限。</string>
-    <string name="permission_media_audio_desc">为了扫描和管理音频文件，请授予音频媒体访问权限。</string>
     <string name="permission_location_desc">为了扫描 Wi-Fi 网络中的设备，请授予位置权限。</string>
     <string name="permission_usage_desc">为了显示应用使用详情，请在使用情况访问设置中允许 Quick Clean PRO。</string>
     <string name="permission_network_usage_desc">为了显示网络用量详情，请在使用情况访问设置中允许 Quick Clean PRO。</string>
@@ -526,8 +523,6 @@
     <string name="exit_prompt_notification_tip_block">拦截不需要的通知</string>
     <string name="exit_prompt_notification_tip_matters">只看重要内容</string>
     <string name="exit_prompt_notification_tip_focus">保持专注，减少打扰</string>
-    <string name="permission_post_notifications_desc">为了保持清理工具可用，请允许 Quick Clean PRO 发送通知。</string>
-    <string name="permission_hint_app_notifications">只会发送应用状态和清理通知。</string>
     <!-- Recently added strings -->
     <string name="continue_scan">继续</string>
     <string name="home_app_lock_title">应用锁</string>

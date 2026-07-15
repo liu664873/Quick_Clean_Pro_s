@@ -25,14 +25,14 @@ import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureOperationEv
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureExitReason
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureFlowRuntime
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.OperationAction
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
-import com.quickcleanpro.phonecleaner.common.permission.CleanXPermissionCoordinator
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.AppPermissionCoordinator
 import com.quickcleanpro.phonecleaner.feature.junkclean.ui.JunkCleanScreen
 
 @Composable
 fun JunkCleanRoute(
     viewModel: JunkCleanViewModel,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     featureFlow: FeatureFlowRuntime,
     onNavigateBack: () -> Unit,
     onNavigateHome: () -> Unit,
@@ -50,12 +50,12 @@ fun JunkCleanRoute(
         }
 
     LaunchedEffect(viewModel, permissionCoordinator) {
-        permissionCoordinator.guard(
-            action = CleanXProtectedAction.JunkStartScan,
+        permissionCoordinator.ensure(
+            action = ProtectedAction.JunkStartScan,
             onGranted = {
                 viewModel.startScanIfNeeded()
             },
-            onRejected = {
+            onDenied = {
                 featureFlow.exit(FeatureKey.JUNK_CLEAN, FeatureExitReason.PermissionRejected) {
                     viewModel.clearResult()
                     onNavigateHome()
@@ -131,7 +131,7 @@ fun JunkCleanRoute(
             when (action) {
                 JunkCleanUiAction.Back -> handleBack()
                 JunkCleanUiAction.CleanSelected -> {
-                    permissionCoordinator.guard(CleanXProtectedAction.JunkCleanSelected) {
+                    permissionCoordinator.ensure(ProtectedAction.JunkCleanSelected) {
                         viewModel.startCleaning(context)
                     }
                 }

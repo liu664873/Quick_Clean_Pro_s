@@ -37,7 +37,7 @@ import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
 import com.quickcleanpro.phonecleaner.common.ui.components.CleanXIconButtonSize
 import com.quickcleanpro.phonecleaner.common.ui.components.CleanXPillShape
 import com.quickcleanpro.phonecleaner.common.ui.components.CleanXScaffoldPage
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
 import com.quickcleanpro.phonecleaner.common.permission.ui.LocalPermissionCoordinator
 
 
@@ -75,10 +75,10 @@ internal fun AppLockRoute(
 
     LaunchedEffect(uiState.overlayPermissionRequired) {
         if (uiState.overlayPermissionRequired) {
-            permissionCoordinator.guard(
-                action = CleanXProtectedAction.AppLockRequestOverlay,
+            permissionCoordinator.ensure(
+                action = ProtectedAction.AppLockRequestOverlay,
                 onGranted = { viewModel.onAction(AppLockAction.ConsumeOverlayPermissionRequest) },
-                onRejected = { viewModel.onAction(AppLockAction.ConsumeOverlayPermissionRequest) },
+                onDenied = { viewModel.onAction(AppLockAction.ConsumeOverlayPermissionRequest) },
             )
         }
     }
@@ -96,14 +96,14 @@ internal fun AppLockRoute(
                 if (uiState.page == AppLockPage.SelectApps) {
                     viewModel.onAction(action)
                 } else {
-                    permissionCoordinator.guard(CleanXProtectedAction.AppLockOpenProtectedArea) {
+                    permissionCoordinator.ensure(ProtectedAction.AppLockOpenProtectedArea) {
                         viewModel.onAction(action)
                     }
                 }
             }
             AppLockAction.ToggleAllApps,
             AppLockAction.BeginCreatePin -> {
-                permissionCoordinator.guard(CleanXProtectedAction.AppLockOpenProtectedArea) {
+                permissionCoordinator.ensure(ProtectedAction.AppLockOpenProtectedArea) {
                     viewModel.onAction(action)
                 }
             }
@@ -111,7 +111,7 @@ internal fun AppLockRoute(
                 if (!action.enabled) {
                     viewModel.onAction(action)
                 } else {
-                permissionCoordinator.guard(CleanXProtectedAction.AppLockEnableMonitoring) {
+                permissionCoordinator.ensure(ProtectedAction.AppLockEnableMonitoring) {
                         viewModel.onAction(action)
                     }
                 }
@@ -126,4 +126,3 @@ internal fun AppLockRoute(
         onNavigate = navigator::open,
     )
 }
-

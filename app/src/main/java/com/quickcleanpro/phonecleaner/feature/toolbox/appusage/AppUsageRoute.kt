@@ -80,10 +80,10 @@ fun AppUsageRoute(
     LaunchedEffect(uiState.permissionRequestPending) {
         if (uiState.permissionRequestPending) {
             viewModel.onAction(AppUsageAction.PermissionRequestConsumed)
-            permissionCoordinator.request(
-                item = PermissionType.UsageAccess,
+            permissionCoordinator.ensure(
+                permission = PermissionType.UsageAccess,
                 onGranted = { viewModel.onAction(AppUsageAction.PermissionGranted) },
-                onRejected = { viewModel.onAction(AppUsageAction.PermissionRejected) },
+                onDenied = { viewModel.onAction(AppUsageAction.PermissionRejected) },
             )
         }
     }

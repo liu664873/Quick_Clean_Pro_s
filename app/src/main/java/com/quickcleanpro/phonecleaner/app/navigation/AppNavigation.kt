@@ -6,6 +6,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.quickcleanpro.phonecleaner.app.navigation.register.registerAntiVirusRoutes
+import com.quickcleanpro.phonecleaner.app.navigation.register.registerAppLockRoutes
+import com.quickcleanpro.phonecleaner.app.navigation.register.registerCleanRoutes
+import com.quickcleanpro.phonecleaner.app.navigation.register.registerFileManagerRoutes
+import com.quickcleanpro.phonecleaner.app.navigation.register.registerHomeRoutes
+import com.quickcleanpro.phonecleaner.app.navigation.register.registerOnboardingRoute
+import com.quickcleanpro.phonecleaner.app.navigation.register.registerSettingsRoutes
+import com.quickcleanpro.phonecleaner.app.navigation.register.registerSplashRoute
+import com.quickcleanpro.phonecleaner.app.navigation.register.registerToolboxRoutes
 import com.quickcleanpro.phonecleaner.app.runtime.AppRuntimeBindings
 import com.quickcleanpro.phonecleaner.app.runtime.startup.AppLaunchCoordinator
 

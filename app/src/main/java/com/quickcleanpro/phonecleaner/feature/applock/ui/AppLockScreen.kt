@@ -32,7 +32,7 @@ import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
 import com.quickcleanpro.phonecleaner.common.ui.components.CleanXIconButtonSize
 import com.quickcleanpro.phonecleaner.common.ui.components.CleanXPillShape
 import com.quickcleanpro.phonecleaner.common.ui.components.CleanXScaffoldPage
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
 
 @Composable
 internal fun AppLockScreen(

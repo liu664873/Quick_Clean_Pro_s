@@ -133,8 +133,6 @@
     <string name="exit_prompt_notification_tip_matters">Lihat hanya yang penting</string>
     <string name="exit_prompt_notification_tip_focus">Tetap fokus. Kurangi gangguan</string>
     <string name="permission_title_required">Izin diperlukan</string>
-    <string name="permission_post_notifications_desc">Agar alat pembersihan tetap tersedia, izinkan Quick Clean PRO mengirim notifikasi.</string>
-    <string name="permission_hint_app_notifications">Hanya notifikasi status aplikasi dan pembersihan yang akan dikirim.</string>
     <string name="notification_enable_title">Bagaimana cara mengaktifkan notifikasi?</string>
     <string name="notification_enable_step_find_prefix">1. Temukan\u0020</string>
     <string name="notification_enable_step_find_suffix"></string>
@@ -274,9 +272,6 @@
     <string name="clean_result_files_failed">%1$d files could not be removed. Some folders require system file access.</string>
     <string name="permission_virus_storage_desc">To scan files for threats, please grant access to your phone files and media.</string>
     <string name="permission_whatsapp_storage_desc">To scan and clean WhatsApp files, please grant access to your phone files and media.</string>
-    <string name="permission_media_images_desc">To scan and manage photos, please grant access to your images and media.</string>
-    <string name="permission_media_video_desc">To scan and manage videos, please grant access to your video media.</string>
-    <string name="permission_media_audio_desc">To scan and manage audio files, please grant access to your audio media.</string>
     <string name="permission_location_desc">To scan devices on your Wi-Fi network, please grant location permission.</string>
     <string name="permission_hint_threat_files">Only risky files you choose will be handled.</string>
     <string name="permission_hint_whatsapp_files">Only WhatsApp cleanup files will be managed.</string>

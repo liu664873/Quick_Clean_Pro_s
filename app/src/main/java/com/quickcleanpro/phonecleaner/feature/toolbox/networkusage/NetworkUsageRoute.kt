@@ -58,10 +58,10 @@ fun NetworkUsageRoute(
     LaunchedEffect(uiState.permissionRequestPending) {
         if (uiState.permissionRequestPending) {
             viewModel.onAction(NetworkUsageAction.PermissionRequestConsumed)
-            permissionCoordinator.request(
-                item = PermissionType.UsageAccess,
+            permissionCoordinator.ensure(
+                permission = PermissionType.UsageAccess,
                 onGranted = { viewModel.onAction(NetworkUsageAction.PermissionGranted) },
-                onRejected = { viewModel.onAction(NetworkUsageAction.PermissionRejected) },
+                onDenied = { viewModel.onAction(NetworkUsageAction.PermissionRejected) },
             )
         }
     }

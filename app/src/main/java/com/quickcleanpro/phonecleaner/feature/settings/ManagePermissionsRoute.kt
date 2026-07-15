@@ -19,7 +19,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.quickcleanpro.phonecleaner.R
 import com.quickcleanpro.phonecleaner.common.ui.components.CleanXScaffoldPage
-import com.quickcleanpro.phonecleaner.common.permission.CleanXPermissionCoordinator
+import com.quickcleanpro.phonecleaner.common.permission.AppPermissionCoordinator
 import com.quickcleanpro.phonecleaner.feature.settings.ui.ManagePermissionsContent
 import com.quickcleanpro.phonecleaner.feature.settings.ui.PermissionRowUi
 import com.quickcleanpro.phonecleaner.common.ui.theme.CleanXContentPadding
@@ -32,7 +32,7 @@ import com.quickcleanpro.phonecleaner.feature.settings.ui.ManagePermissionsScree
 @Composable
 fun ManagePermissionsRoute(
     navigator: AppNavigator,
-    permissionCoordinator: CleanXPermissionCoordinator,
+    permissionCoordinator: AppPermissionCoordinator,
     viewModel: ManagePermissionsViewModel,
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current

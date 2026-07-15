@@ -58,7 +58,7 @@ import com.quickcleanpro.phonecleaner.common.ui.components.animations.CleanXDele
 import com.quickcleanpro.phonecleaner.common.ui.components.buttons.CleanXPrimaryButton
 import com.quickcleanpro.phonecleaner.common.ui.components.popups.StopScanDialog
 import com.quickcleanpro.phonecleaner.feature.toolbox.shared.ui.ToolboxScanningContent
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureOperationEvent
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.OperationAction
 import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey

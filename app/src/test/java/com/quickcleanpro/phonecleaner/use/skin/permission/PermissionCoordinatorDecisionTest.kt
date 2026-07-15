@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.common.permission.runtime
+package com.quickcleanpro.phonecleaner.app.runtime.permission
 
 import com.quickcleanpro.phonecleaner.common.permission.PermissionType
 

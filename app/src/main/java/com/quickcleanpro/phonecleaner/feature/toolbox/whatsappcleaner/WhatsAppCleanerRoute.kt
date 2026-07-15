@@ -10,7 +10,7 @@ import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureOperationEv
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureExitReason
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureFlowRuntime
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.OperationAction
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
 import com.quickcleanpro.phonecleaner.common.permission.ui.LocalPermissionCoordinator
 import com.quickcleanpro.phonecleaner.feature.toolbox.whatsappcleaner.WhatsAppCleanerAction
 import com.quickcleanpro.phonecleaner.feature.toolbox.whatsappcleaner.WhatsAppCleanerViewModel
@@ -33,10 +33,10 @@ fun WhatsAppCleanerRoute(
     }
 
     LaunchedEffect(viewModel, permissionCoordinator) {
-        permissionCoordinator.guard(
-            action = CleanXProtectedAction.WhatsAppStartScan,
+        permissionCoordinator.ensure(
+            action = ProtectedAction.WhatsAppStartScan,
             onGranted = { viewModel.onAction(WhatsAppCleanerAction.StartScan) },
-            onRejected = ::exitToHomeAfterPermissionRejected,
+            onDenied = ::exitToHomeAfterPermissionRejected,
         )
     }
 
@@ -70,7 +70,7 @@ fun WhatsAppCleanerRoute(
                     }
                 }
                 WhatsAppCleanerAction.CleanSelected -> {
-                    permissionCoordinator.guard(CleanXProtectedAction.WhatsAppCleanSelected) {
+                    permissionCoordinator.ensure(ProtectedAction.WhatsAppCleanSelected) {
                         viewModel.onAction(action)
                     }
                 }

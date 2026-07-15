@@ -16,7 +16,7 @@ import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
 import com.quickcleanpro.phonecleaner.app.runtime.external.ExternalActivityLauncher
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureExitReason
 import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureFlowRuntime
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
 import com.quickcleanpro.phonecleaner.common.permission.appSettingsIntent
 import com.quickcleanpro.phonecleaner.common.permission.ui.LocalPermissionCoordinator
 import com.quickcleanpro.phonecleaner.feature.antivirus.ui.AntiVirusScreen
@@ -52,12 +52,12 @@ fun AntiVirusRoute(
                     }
                 }
                 is VirusHomeEffect.RequestDeepScanPermission -> {
-                    permissionCoordinator.guard(
-                        action = CleanXProtectedAction.VirusDeepScanStart,
+                    permissionCoordinator.ensure(
+                        action = ProtectedAction.VirusDeepScanStart,
                         onGranted = {
                             viewModel.onHomeAction(VirusHomeAction.DeepScanPermissionResult(granted = true))
                         },
-                        onRejected = {
+                        onDenied = {
                             viewModel.onHomeAction(VirusHomeAction.DeepScanPermissionResult(granted = false))
                         },
                     )

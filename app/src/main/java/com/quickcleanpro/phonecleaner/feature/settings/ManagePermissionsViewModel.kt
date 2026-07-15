@@ -69,8 +69,4 @@ private val quickCleanProManageItems: List<QuickCleanProPermissionManageItem> =
             R.string.settings_notification_permission,
         ),
 //        QuickCleanProPermissionManageItem(PermissionType.Overlay, R.string.settings_overlay_permission),
-//        QuickCleanProPermissionManageItem(
-//            PermissionType.PostNotifications,
-//            R.string.settings_post_notifications_permission,
-//        ),
     )

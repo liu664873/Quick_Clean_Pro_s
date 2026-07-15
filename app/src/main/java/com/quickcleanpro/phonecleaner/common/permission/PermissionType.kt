@@ -1,20 +1,13 @@
 package com.quickcleanpro.phonecleaner.common.permission
 
-import com.quickcleanpro.phonecleaner.common.permission.PermissionFeature
-
 enum class PermissionType(
-    override val key: String,
-) : PermissionFeature {
+    val key: String,
+) {
     StorageFiles("storage_files"),
-    MediaImages("media_images"),
-    MediaImagesWithLocation("media_images_with_location"),
-    MediaVideo("media_video"),
-    MediaAudio("media_audio"),
     Location("location"),
     UsageAccess("usage_access"),
     NotificationListener("notification_listener"),
     Overlay("overlay"),
-    PostNotifications("post_notifications"),
     ;
 
     companion object {

@@ -1,7 +1,5 @@
 package com.quickcleanpro.phonecleaner.common.permission
 
-import com.quickcleanpro.phonecleaner.common.permission.PermissionType
-
 import android.Manifest
 import android.app.AppOpsManager
 import android.content.ComponentName
@@ -18,15 +16,10 @@ import androidx.core.content.ContextCompat
 fun commonPermissionHandlers(): List<PermissionHandler> =
     listOf(
         StorageFilesPermissionHandler,
-        MediaImagesPermissionHandler,
-        MediaImagesWithLocationPermissionHandler,
-        MediaVideoPermissionHandler,
-        MediaAudioPermissionHandler,
         LocationPermissionHandler,
         UsageAccessPermissionHandler,
         NotificationListenerPermissionHandler(),
         OverlayPermissionHandler,
-        PostNotificationsPermissionHandler,
     )
 
 object StorageFilesPermissionHandler : PermissionHandler {
@@ -65,73 +58,6 @@ object StorageFilesPermissionHandler : PermissionHandler {
         }
 }
 
-object MediaImagesPermissionHandler : PermissionHandler {
-    override val permission: PermissionType = PermissionType.MediaImages
-
-    override fun isGranted(context: Context): Boolean = runtimePermissions(context).all { context.hasRuntimePermission(it) }
-
-    override fun runtimePermissions(context: Context): List<String> =
-        listOf(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                Manifest.permission.READ_MEDIA_IMAGES
-            } else {
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            },
-        )
-
-    override fun settingsIntents(context: Context): List<Intent> = listOf(appSettingsIntent(context))
-}
-
-object MediaImagesWithLocationPermissionHandler : PermissionHandler {
-    override val permission: PermissionType = PermissionType.MediaImagesWithLocation
-
-    override fun isGranted(context: Context): Boolean = runtimePermissions(context).all { context.hasRuntimePermission(it) }
-
-    override fun runtimePermissions(context: Context): List<String> =
-        buildList {
-            addAll(MediaImagesPermissionHandler.runtimePermissions(context))
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                add(Manifest.permission.ACCESS_MEDIA_LOCATION)
-            }
-        }
-
-    override fun settingsIntents(context: Context): List<Intent> = listOf(appSettingsIntent(context))
-}
-
-object MediaVideoPermissionHandler : PermissionHandler {
-    override val permission: PermissionType = PermissionType.MediaVideo
-
-    override fun isGranted(context: Context): Boolean = runtimePermissions(context).all { context.hasRuntimePermission(it) }
-
-    override fun runtimePermissions(context: Context): List<String> =
-        listOf(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                Manifest.permission.READ_MEDIA_VIDEO
-            } else {
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            },
-        )
-
-    override fun settingsIntents(context: Context): List<Intent> = listOf(appSettingsIntent(context))
-}
-
-object MediaAudioPermissionHandler : PermissionHandler {
-    override val permission: PermissionType = PermissionType.MediaAudio
-
-    override fun isGranted(context: Context): Boolean = runtimePermissions(context).all { context.hasRuntimePermission(it) }
-
-    override fun runtimePermissions(context: Context): List<String> =
-        listOf(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                Manifest.permission.READ_MEDIA_AUDIO
-            } else {
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            },
-        )
-
-    override fun settingsIntents(context: Context): List<Intent> = listOf(appSettingsIntent(context))
-}
-
 object LocationPermissionHandler : PermissionHandler {
     override val permission: PermissionType = PermissionType.Location
 
@@ -162,10 +88,7 @@ object UsageAccessPermissionHandler : PermissionHandler {
     override fun runtimePermissions(context: Context): List<String> = emptyList()
 
     override fun settingsIntents(context: Context): List<Intent> =
-        listOf(
-            Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS),
-            appSettingsIntent(context),
-        )
+        listOf(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS), appSettingsIntent(context))
 }
 
 class NotificationListenerPermissionHandler(
@@ -187,10 +110,7 @@ class NotificationListenerPermissionHandler(
     override fun runtimePermissions(context: Context): List<String> = emptyList()
 
     override fun settingsIntents(context: Context): List<Intent> =
-        listOf(
-            Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS),
-            appSettingsIntent(context),
-        )
+        listOf(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS), appSettingsIntent(context))
 }
 
 object OverlayPermissionHandler : PermissionHandler {
@@ -204,42 +124,12 @@ object OverlayPermissionHandler : PermissionHandler {
     override fun settingsIntents(context: Context): List<Intent> =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             listOf(
-                Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:${context.packageName}"),
-                ),
+                Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}")),
                 appSettingsIntent(context),
             )
         } else {
             listOf(appSettingsIntent(context))
         }
-}
-
-object PostNotificationsPermissionHandler : PermissionHandler {
-    override val permission: PermissionType = PermissionType.PostNotifications
-
-    override fun isGranted(context: Context): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            Manifest.permission.POST_NOTIFICATIONS.let(context::hasRuntimePermission)
-
-    override fun runtimePermissions(context: Context): List<String> =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            listOf(Manifest.permission.POST_NOTIFICATIONS)
-        } else {
-            emptyList()
-        }
-
-    override fun settingsIntents(context: Context): List<Intent> =
-        listOf(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                }
-            } else {
-                appSettingsIntent(context)
-            },
-            appSettingsIntent(context),
-        )
 }
 
 fun appSettingsIntent(context: Context): Intent =
@@ -249,4 +139,3 @@ fun appSettingsIntent(context: Context): Intent =
 
 private fun Context.hasRuntimePermission(permission: String): Boolean =
     ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
-

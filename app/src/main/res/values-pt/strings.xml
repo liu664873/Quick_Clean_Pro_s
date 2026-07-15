@@ -62,9 +62,6 @@
     <string name="permission_is_required">Permissão necessária</string>
     <string name="permission_storage_desc">Para escanear e remover lixo, conceda acesso aos arquivos e mídia.</string>
     <string name="permission_storage_files_desc">Para escanear e gerenciar arquivos, conceda acesso aos arquivos e mídia.</string>
-    <string name="permission_media_images_desc">Para gerenciar fotos, conceda acesso a imagens e mídia.</string>
-    <string name="permission_media_video_desc">Para gerenciar vídeos, conceda acesso aos vídeos.</string>
-    <string name="permission_media_audio_desc">Para gerenciar áudios, conceda acesso ao áudio.</string>
     <string name="permission_location_desc">Para escanear dispositivos Wi-Fi, conceda permissão de localização.</string>
     <string name="permission_usage_desc">Para mostrar detalhes de uso de apps, permita Quick Clean PRO no Acesso de uso.</string>
     <string name="permission_hint_junk_deleted">Apenas arquivos lixo serão excluídos.</string>
@@ -168,8 +165,6 @@
     <string name="exit_prompt_notification_tip_matters">Veja apenas o que importa</string>
     <string name="exit_prompt_notification_tip_focus">Mantenha o foco. Reduza interrupções</string>
     <string name="permission_title_required">Permissão necessária</string>
-    <string name="permission_post_notifications_desc">Para manter as ferramentas de limpeza disponíveis, permita que Quick Clean PRO envie notificações.</string>
-    <string name="permission_hint_app_notifications">Apenas notificações de status do app e limpeza serão enviadas.</string>
     <string name="notification_enable_title">Como ativar as notificações?</string>
     <string name="notification_enable_step_find_prefix">1. Encontre\u0020</string>
     <string name="notification_enable_step_find_suffix"></string>

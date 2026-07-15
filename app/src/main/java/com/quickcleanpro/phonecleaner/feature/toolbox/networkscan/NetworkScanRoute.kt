@@ -25,7 +25,8 @@ import com.quickcleanpro.phonecleaner.app.runtime.featureflow.FeatureFlowRuntime
 import com.quickcleanpro.phonecleaner.app.runtime.external.ExternalActivityLauncher
 import com.quickcleanpro.phonecleaner.common.permission.ui.LocalPermissionCoordinator
 import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.PermissionPromptMode
 import com.quickcleanpro.phonecleaner.feature.toolbox.networkscan.NetworkScanPhase
 import com.quickcleanpro.phonecleaner.feature.toolbox.networkscan.NetworkScanViewModel
 import com.quickcleanpro.phonecleaner.feature.toolbox.networkscan.ui.NetworkScanScreen
@@ -75,7 +76,10 @@ fun NetworkScanRoute(
             viewModel.refreshNetworkStateUntilWifiConnected()
         },
         onScan = {
-            permissionCoordinator.guardDirect(CleanXProtectedAction.NetworkScanStart) {
+            permissionCoordinator.ensure(
+                ProtectedAction.NetworkScanStart,
+                mode = PermissionPromptMode.Direct,
+            ) {
                 viewModel.startScan()
             }
         },

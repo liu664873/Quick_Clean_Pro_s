@@ -28,7 +28,7 @@ import com.quickcleanpro.phonecleaner.common.ui.components.CleanXScaffoldPage
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.DeleteConfirmDialog
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.NoResultsDialog
 import com.quickcleanpro.phonecleaner.common.ui.components.popups.StopScanDialog
-import com.quickcleanpro.phonecleaner.common.permission.CleanXProtectedAction
+import com.quickcleanpro.phonecleaner.common.permission.ProtectedAction
 import com.quickcleanpro.phonecleaner.common.permission.ui.rememberPermissionGranted
 import com.quickcleanpro.phonecleaner.feature.files.shared.BaseFileManagerViewModel
 import com.quickcleanpro.phonecleaner.feature.files.shared.FileUri

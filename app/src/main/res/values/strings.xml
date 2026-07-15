@@ -6,7 +6,6 @@
     <string name="permission_usage_desc">To show app usage details, please allow Quick Clean PRO in Usage Access settings.</string>
     <string name="permission_network_usage_desc">To show network usage details, please allow Quick Clean PRO in Usage Access settings.</string>
     <string name="permission_app_lock_usage_desc">To detect when protected apps are opened, please allow Quick Clean PRO in Usage Access settings.</string>
-    <string name="permission_post_notifications_desc">To keep cleanup tools available, please allow Quick Clean PRO to send notifications.</string>
     <string name="permission_notification_desc">To tidy notifications automatically, please allow Quick Clean PRO in Notification Access settings.</string>
     <string name="permission_overlay_desc">To show the PIN screen above protected apps, please allow Quick Clean PRO to draw over other apps.</string>
     <string name="virus_scan_notice_message">Quick Clean PRO will check app information on this device to scan for security risks.</string>
@@ -195,9 +194,6 @@
     <string name="permission_virus_storage_desc">To scan files for threats, please grant access to your phone files and media.</string>
     <string name="permission_installed_apps_desc">To scan installed apps for security risks, please allow access to your installed apps list in system settings.</string>
     <string name="permission_whatsapp_storage_desc">To scan and clean WhatsApp files, please grant access to your phone files and media.</string>
-    <string name="permission_media_images_desc">To scan and manage photos, please grant access to your images and media.</string>
-    <string name="permission_media_video_desc">To scan and manage videos, please grant access to your video media.</string>
-    <string name="permission_media_audio_desc">To scan and manage audio files, please grant access to your audio media.</string>
     <string name="permission_location_desc">To scan devices on your Wi-Fi network, please grant location permission.</string>
     <string name="permission_hint_junk_deleted">Only junk files will be deleted.</string>
     <string name="permission_hint_files_safe">Only selected files will be managed.</string>
@@ -205,7 +201,6 @@
     <string name="permission_hint_whatsapp_files">Only WhatsApp cleanup files will be managed.</string>
     <string name="permission_hint_network_scan">Only nearby network devices will be scanned.</string>
     <string name="permission_hint_usage_read">Only usage statistics will be read.</string>
-    <string name="permission_hint_app_notifications">Only app status and cleanup notifications will be sent.</string>
     <string name="permission_hint_notifications">Only selected app notifications will be blocked.</string>
     <string name="permission_hint_overlay">Only the app lock PIN screen will be shown.</string>
     <string name="permission_hint_no_personal">No personal information will be collected.</string>

@@ -1,4 +1,4 @@
-package com.quickcleanpro.phonecleaner.app.navigation
+package com.quickcleanpro.phonecleaner.app.navigation.register
 
 import android.os.SystemClock
 import androidx.compose.runtime.DisposableEffect
@@ -16,6 +16,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.quickcleanpro.phonecleaner.app.AppConfig
+import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
+import com.quickcleanpro.phonecleaner.app.navigation.AppNavigator
 import com.quickcleanpro.phonecleaner.common.ads.AdRuntime
 import com.quickcleanpro.phonecleaner.common.analytics.AnalyticsTracker
 import com.quickcleanpro.phonecleaner.common.intent.openUrl
@@ -67,7 +69,7 @@ internal fun NavGraphBuilder.registerSplashRoute(
                             onFinished = { viewModel.onAction(SplashAction.OpenAdFinished) },
                         )
                     is SplashEffect.OpenNotificationTarget ->
-                        navController.navigateToNotificationTarget(effect.route, adRuntime)
+                        navigator.openNotificationTarget(effect.route)
                     is SplashEffect.Navigate -> navigator.replace(effect.destination)
                 }
             }

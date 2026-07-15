@@ -1,7 +1,5 @@
 package com.quickcleanpro.phonecleaner.common.permission
 
-import com.quickcleanpro.phonecleaner.common.permission.PermissionType
-
 import android.content.Context
 import android.content.Intent
 
