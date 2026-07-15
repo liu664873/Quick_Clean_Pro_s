@@ -17,6 +17,9 @@ object AdvertiseConfigFactory {
     private const val TAG = "AdvertiseConfigFactory"
 
     fun create(context: Context): AdvertiseSdkConfig {
+        val singularEnabled =
+            BuildConfig.ADV_SINGULAR_API_KEY.isNotBlank() &&
+                BuildConfig.ADV_SINGULAR_SECRET.isNotBlank()
         logMissingRequiredConfig()
         return AdvertiseSdkConfigs.create(context, BuildConfig.DEBUG) {
             legal(
@@ -58,7 +61,7 @@ object AdvertiseConfigFactory {
                 serverUrl = BuildConfig.ADV_THINKING_SERVER_URL,
             )
             singular(
-                enabled = true,
+                enabled = singularEnabled,
                 apiKey = BuildConfig.ADV_SINGULAR_API_KEY,
                 secret = BuildConfig.ADV_SINGULAR_SECRET,
             )
@@ -207,6 +210,8 @@ object AdvertiseConfigFactory {
         warnIfBlank("ADV_THINKING_APP_KEY", BuildConfig.ADV_THINKING_APP_KEY)
         warnIfBlank("ADV_THINKING_SERVER_URL", BuildConfig.ADV_THINKING_SERVER_URL)
         logMaskedIfPresent("ADV_THINKING_APP_KEY", BuildConfig.ADV_THINKING_APP_KEY)
+        warnIfBlank("ADV_SINGULAR_API_KEY", BuildConfig.ADV_SINGULAR_API_KEY)
+        warnIfBlank("ADV_SINGULAR_SECRET", BuildConfig.ADV_SINGULAR_SECRET)
         warnIfBlank("ADV_SAFE_EXPECTED_SIGNATURES", BuildConfig.ADV_SAFE_EXPECTED_SIGNATURES)
     }
 
@@ -230,7 +235,7 @@ object AdvertiseConfigFactory {
         value: String,
     ) {
         if (value.isBlank()) {
-            Log.w(TAG, "$name is blank; related advertise capability is enabled but will wait for release configuration.")
+            Log.w(TAG, "$name is blank; related capability is unavailable until release configuration is provided.")
         }
     }
 }
