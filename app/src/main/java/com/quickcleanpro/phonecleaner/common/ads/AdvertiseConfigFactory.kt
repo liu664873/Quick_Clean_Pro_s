@@ -20,6 +20,13 @@ object AdvertiseConfigFactory {
         val singularEnabled =
             BuildConfig.ADV_SINGULAR_API_KEY.isNotBlank() &&
                 BuildConfig.ADV_SINGULAR_SECRET.isNotBlank()
+        val facebookEnabled =
+            BuildConfig.ADV_FACEBOOK_APP_ID.isNotBlank() &&
+                BuildConfig.ADV_FACEBOOK_CLIENT_TOKEN.isNotBlank()
+        val tiktokEnabled =
+            BuildConfig.ADV_TIKTOK_ACCESS_TOKEN.isNotBlank() &&
+                BuildConfig.ADV_TIKTOK_TT_APP_ID.isNotBlank() &&
+                BuildConfig.ADV_TIKTOK_APP_ID.isNotBlank()
         logMissingRequiredConfig()
         return AdvertiseSdkConfigs.create(context, BuildConfig.DEBUG) {
             legal(
@@ -79,12 +86,12 @@ object AdvertiseConfigFactory {
             )
 
             facebook(
-                enabled = true,
+                enabled = facebookEnabled,
                 appId = BuildConfig.ADV_FACEBOOK_APP_ID,
                 clientToken = BuildConfig.ADV_FACEBOOK_CLIENT_TOKEN,
             )
             tiktok(
-                enabled = true,
+                enabled = tiktokEnabled,
                 accessToken = BuildConfig.ADV_TIKTOK_ACCESS_TOKEN,
                 ttAppId = BuildConfig.ADV_TIKTOK_TT_APP_ID,
                 appId = BuildConfig.ADV_TIKTOK_APP_ID,
@@ -202,11 +209,23 @@ object AdvertiseConfigFactory {
         warnIfBlank("ADV_SERVER_RELEASE_HOST", BuildConfig.ADV_SERVER_RELEASE_HOST)
         warnIfBlank("ADV_SERVER_TEST_HOST", BuildConfig.ADV_SERVER_TEST_HOST)
         warnIfBlank("ADV_PLAY_INTEGRITY_PARSE_TOKEN_KEY", BuildConfig.ADV_PLAY_INTEGRITY_PARSE_TOKEN_KEY)
-        warnIfBlank("ADV_FACEBOOK_APP_ID", BuildConfig.ADV_FACEBOOK_APP_ID)
-        warnIfBlank("ADV_FACEBOOK_CLIENT_TOKEN", BuildConfig.ADV_FACEBOOK_CLIENT_TOKEN)
-        warnIfBlank("ADV_TIKTOK_ACCESS_TOKEN", BuildConfig.ADV_TIKTOK_ACCESS_TOKEN)
-        warnIfBlank("ADV_TIKTOK_TT_APP_ID", BuildConfig.ADV_TIKTOK_TT_APP_ID)
-        warnIfBlank("ADV_TIKTOK_APP_ID", BuildConfig.ADV_TIKTOK_APP_ID)
+        warnIfPartiallyConfigured(
+            capability = "Facebook",
+            fields =
+                mapOf(
+                    "ADV_FACEBOOK_APP_ID" to BuildConfig.ADV_FACEBOOK_APP_ID,
+                    "ADV_FACEBOOK_CLIENT_TOKEN" to BuildConfig.ADV_FACEBOOK_CLIENT_TOKEN,
+                ),
+        )
+        warnIfPartiallyConfigured(
+            capability = "TikTok",
+            fields =
+                mapOf(
+                    "ADV_TIKTOK_ACCESS_TOKEN" to BuildConfig.ADV_TIKTOK_ACCESS_TOKEN,
+                    "ADV_TIKTOK_TT_APP_ID" to BuildConfig.ADV_TIKTOK_TT_APP_ID,
+                    "ADV_TIKTOK_APP_ID" to BuildConfig.ADV_TIKTOK_APP_ID,
+                ),
+        )
         warnIfBlank("ADV_THINKING_APP_KEY", BuildConfig.ADV_THINKING_APP_KEY)
         warnIfBlank("ADV_THINKING_SERVER_URL", BuildConfig.ADV_THINKING_SERVER_URL)
         logMaskedIfPresent("ADV_THINKING_APP_KEY", BuildConfig.ADV_THINKING_APP_KEY)
@@ -236,6 +255,16 @@ object AdvertiseConfigFactory {
     ) {
         if (value.isBlank()) {
             Log.w(TAG, "$name is blank; related capability is unavailable until release configuration is provided.")
+        }
+    }
+
+    private fun warnIfPartiallyConfigured(
+        capability: String,
+        fields: Map<String, String>,
+    ) {
+        val missing = fields.filterValues(String::isBlank).keys
+        if (missing.isNotEmpty() && missing.size != fields.size) {
+            Log.w(TAG, "$capability configuration is incomplete; missing: ${missing.joinToString()}")
         }
     }
 }
