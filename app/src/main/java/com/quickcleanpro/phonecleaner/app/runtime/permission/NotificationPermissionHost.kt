@@ -37,85 +37,69 @@ internal fun NotificationPermissionHost(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val latestState by rememberUpdatedState(state)
     val latestOnPermissionGranted by rememberUpdatedState(onPermissionGranted)
-    val isSplashVisible = currentRoute == null || currentRoute == AppDestination.Splash.route
-    val isHomeVisible = currentRoute in AppDestination.homeRoutes
+    val surface =
+        when {
+            currentRoute == null || currentRoute == AppDestination.Splash.route ->
+                NotificationPermissionSurface.Splash
+            currentRoute in AppDestination.homeRoutes -> NotificationPermissionSurface.Home
+            else -> NotificationPermissionSurface.Other
+        }
     val permissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            viewModel.onAction(
-                NotificationPermissionAction.PermissionResult(
-                    granted = granted,
-                    shouldShowRationale = context.shouldShowPostNotificationsRationale(),
-                ),
+            viewModel.onSystemPermissionResult(
+                granted = granted,
+                shouldShowRationale = context.shouldShowPostNotificationsRationale(),
             )
         }
 
-    LaunchedEffect(isSplashVisible, isHomeVisible) {
-        viewModel.onAction(
-            NotificationPermissionAction.VisibilityChanged(
-                isSplashVisible = isSplashVisible,
-                isHomeVisible = isHomeVisible,
-                shouldShowRationale = context.shouldShowPostNotificationsRationale(),
-            ),
+    LaunchedEffect(surface) {
+        viewModel.onSurfaceChanged(
+            surface = surface,
+            shouldShowRationale = context.shouldShowPostNotificationsRationale(),
         )
     }
-    LaunchedEffect(isHomeVisible) {
-        if (isHomeVisible) {
+    LaunchedEffect(surface) {
+        if (surface == NotificationPermissionSurface.Home) {
             delay(HOME_NOTIFICATION_PERMISSION_PROMPT_DELAY_MILLIS)
-            viewModel.onAction(NotificationPermissionAction.HomePromptDelayElapsed)
-        }
-    }
-    LaunchedEffect(
-        state.suppressHomePromptUntilMillis,
-        state.isHomeVisible,
-        state.hasPermission,
-        state.requestSource,
-    ) {
-        val delayMillis = state.suppressHomePromptUntilMillis - System.currentTimeMillis()
-        if (state.isHomeVisible &&
-            !state.hasPermission &&
-            state.requestSource == null &&
-            delayMillis > 0L
-        ) {
-            delay(delayMillis)
-            viewModel.onAction(NotificationPermissionAction.HomePromptCooldownElapsed)
+            viewModel.onHomePromptDelayElapsed()
         }
     }
     LaunchedEffect(viewModel, context, externalActivityLauncher) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                is NotificationPermissionEffect.RequestSystemPermission ->
+                is NotificationPermissionCommand.RequestSystemPermission ->
                     permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                NotificationPermissionEffect.OpenAppSettings -> {
+                NotificationPermissionCommand.OpenAppSettings -> {
                     externalActivityLauncher.markLaunch()
                     val launched = runCatching { context.startActivity(appSettingsIntent(context)) }
                         .onFailure { externalActivityLauncher.cancelLaunch() }
                         .isSuccess
-                    viewModel.onAction(NotificationPermissionAction.SettingsLaunchResult(launched))
+                    viewModel.onSettingsLaunchResult(launched)
                 }
-                NotificationPermissionEffect.NotifyPermissionGranted -> latestOnPermissionGranted()
+                NotificationPermissionCommand.NotifyPermissionGranted -> latestOnPermissionGranted()
             }
         }
     }
     DisposableEffect(lifecycleOwner, viewModel, context) {
         val observer = LifecycleEventObserver { _, event ->
             val current = latestState
-            if (event == Lifecycle.Event.ON_RESUME && current.isHomeVisible) {
-                viewModel.onAction(
-                    NotificationPermissionAction.Refresh(
-                        returningFromSettings = current.settingsLaunchPending,
-                        shouldShowRationale = context.shouldShowPostNotificationsRationale(),
-                    ),
-                )
+            if (event == Lifecycle.Event.ON_RESUME &&
+                current.surface == NotificationPermissionSurface.Home
+            ) {
+                viewModel.onAppResumed(context.shouldShowPostNotificationsRationale())
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    if (state.customDialogVisible && state.isHomeVisible && !state.hasPermission) {
+    if (state.customDialogVisible &&
+        state.surface == NotificationPermissionSurface.Home &&
+        !state.hasPermission
+    ) {
         NotificationPermissionDialog(
-            onConfirm = { viewModel.onAction(NotificationPermissionAction.CustomPromptConfirmed) },
-            onDismiss = { viewModel.onAction(NotificationPermissionAction.CustomPromptDismissed) },
+            onConfirm = viewModel::onCustomPromptConfirmed,
+            onDismiss = viewModel::onCustomPromptDismissed,
         )
     }
 }

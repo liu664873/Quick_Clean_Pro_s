@@ -7,72 +7,95 @@ import org.junit.Test
 
 class NotificationPermissionStateMachineTest {
     @Test
+    fun `initial state awaits first request only on Android 13 and above`() {
+        val facts = facts(hasRequestedBefore = false)
+
+        assertEquals(
+            NotificationPermissionPhase.AwaitingInitialRequest,
+            initialNotificationPermissionState(true, facts).phase,
+        )
+        assertEquals(
+            NotificationPermissionPhase.Idle,
+            initialNotificationPermissionState(false, facts).phase,
+        )
+    }
+
+    @Test
     fun `first splash visit pauses and requests system permission once`() {
         val first =
             reduceNotificationPermissionState(
-                state = NotificationPermissionUiState(splashPaused = true),
-                action = visibility(splash = true),
+                state =
+                    state(
+                        facts = facts(hasRequestedBefore = false),
+                        phase = NotificationPermissionPhase.AwaitingInitialRequest,
+                    ),
+                action = surface(NotificationPermissionSurface.Splash, hasRequestedBefore = false),
                 nowMillis = NOW,
             )
 
         assertTrue(first.state.splashPaused)
         assertTrue(first.state.permissionUiActive)
-        assertTrue(first.state.hasRequestedBefore)
-        assertEquals(NotificationPermissionRequestSource.Splash, first.state.requestSource)
+        assertTrue(first.state.facts.hasRequestedBefore)
+        assertEquals(
+            NotificationPermissionPhase.RequestingSystem(NotificationPermissionRequestSource.Splash),
+            first.state.phase,
+        )
         assertEquals(
             listOf(
-                NotificationPermissionSideEffect.SaveRequestedBefore,
-                NotificationPermissionSideEffect.Host(
-                    NotificationPermissionEffect.RequestSystemPermission(
-                        NotificationPermissionRequestSource.Splash,
-                    ),
+                NotificationPermissionCommand.SaveRequestedBefore,
+                NotificationPermissionCommand.RequestSystemPermission(
+                    NotificationPermissionRequestSource.Splash,
                 ),
             ),
-            first.effects,
+            first.commands,
         )
 
         val repeated =
             reduceNotificationPermissionState(
                 state = first.state,
-                action = visibility(splash = true),
+                action = surface(NotificationPermissionSurface.Splash),
                 nowMillis = NOW,
             )
 
-        assertTrue(repeated.effects.isEmpty())
+        assertTrue(repeated.commands.isEmpty())
     }
 
     @Test
     fun `home does not request permission before splash has requested it`() {
         val transition =
             reduceNotificationPermissionState(
-                state = homeState(hasRequestedBefore = false),
+                state = state(surface = NotificationPermissionSurface.Home, facts = facts(hasRequestedBefore = false)),
                 action = NotificationPermissionAction.HomePromptDelayElapsed,
                 nowMillis = NOW,
             )
 
         assertFalse(transition.state.permissionUiActive)
-        assertTrue(transition.effects.isEmpty())
+        assertTrue(transition.commands.isEmpty())
     }
 
     @Test
-    fun `home rationale requests system permission and starts cooldown`() {
+    fun `home rationale requests system permission`() {
         val transition =
             reduceNotificationPermissionState(
-                state = homeState(shouldShowRationale = true),
+                state =
+                    state(
+                        surface = NotificationPermissionSurface.Home,
+                        facts = facts(shouldShowRationale = true),
+                    ),
                 action = NotificationPermissionAction.HomePromptDelayElapsed,
                 nowMillis = NOW,
             )
 
-        assertEquals(NotificationPermissionRequestSource.HomeSystem, transition.state.requestSource)
-        assertEquals(NOW + HOME_SYSTEM_REQUEST_COOLDOWN_MILLIS, transition.state.suppressHomePromptUntilMillis)
+        assertEquals(
+            NotificationPermissionPhase.RequestingSystem(NotificationPermissionRequestSource.HomeSystem),
+            transition.state.phase,
+        )
         assertTrue(transition.state.permissionUiActive)
         assertEquals(
-            NotificationPermissionSideEffect.Host(
-                NotificationPermissionEffect.RequestSystemPermission(
-                    NotificationPermissionRequestSource.HomeSystem,
-                ),
+            NotificationPermissionCommand.RequestSystemPermission(
+                NotificationPermissionRequestSource.HomeSystem,
             ),
-            transition.effects.last(),
+            transition.commands.last(),
         )
     }
 
@@ -80,7 +103,7 @@ class NotificationPermissionStateMachineTest {
     fun `permanent denial shows custom prompt once per local day`() {
         val first =
             reduceNotificationPermissionState(
-                state = homeState(),
+                state = state(surface = NotificationPermissionSurface.Home),
                 action = NotificationPermissionAction.HomePromptDelayElapsed,
                 nowMillis = NOW,
             )
@@ -88,33 +111,41 @@ class NotificationPermissionStateMachineTest {
         assertTrue(first.state.customDialogVisible)
         assertTrue(first.state.permissionUiActive)
         assertEquals(
-            listOf(NotificationPermissionSideEffect.SaveLastCustomPromptAt(NOW)),
-            first.effects,
+            listOf(NotificationPermissionCommand.SaveLastCustomPromptAt(NOW)),
+            first.commands,
         )
 
         val sameDay =
             reduceNotificationPermissionState(
-                state = homeState(lastCustomPromptAt = NOW),
+                state =
+                    state(
+                        surface = NotificationPermissionSurface.Home,
+                        facts = facts(lastCustomPromptAt = NOW),
+                    ),
                 action = NotificationPermissionAction.HomePromptDelayElapsed,
                 nowMillis = NOW + 1_000L,
             )
 
         assertFalse(sameDay.state.customDialogVisible)
-        assertTrue(sameDay.effects.isEmpty())
+        assertTrue(sameDay.commands.isEmpty())
     }
 
     @Test
     fun `session deferral suppresses home custom prompt`() {
         val transition =
             reduceNotificationPermissionState(
-                state = homeState(homeCustomPromptDeferred = true),
+                state =
+                    state(
+                        surface = NotificationPermissionSurface.Home,
+                        customPromptDeferredForSession = true,
+                    ),
                 action = NotificationPermissionAction.HomePromptDelayElapsed,
                 nowMillis = NOW,
             )
 
         assertFalse(transition.state.customDialogVisible)
         assertFalse(transition.state.permissionUiActive)
-        assertTrue(transition.effects.isEmpty())
+        assertTrue(transition.commands.isEmpty())
     }
 
     @Test
@@ -122,22 +153,24 @@ class NotificationPermissionStateMachineTest {
         val transition =
             reduceNotificationPermissionState(
                 state =
-                    homeState(
-                        requestSource = NotificationPermissionRequestSource.HomeSystem,
-                        permissionUiActive = true,
+                    state(
+                        surface = NotificationPermissionSurface.Home,
+                        phase =
+                            NotificationPermissionPhase.RequestingSystem(
+                                NotificationPermissionRequestSource.HomeSystem,
+                            ),
                     ),
                 action =
-                    NotificationPermissionAction.PermissionResult(
-                        granted = false,
-                        shouldShowRationale = false,
+                    NotificationPermissionAction.SystemPermissionResult(
+                        facts = facts(shouldShowRationale = false),
                     ),
                 nowMillis = NOW,
             )
 
-        assertTrue(transition.state.homeCustomPromptDeferred)
+        assertTrue(transition.state.customPromptDeferredForSession)
         assertFalse(transition.state.permissionUiActive)
-        assertEquals(null, transition.state.requestSource)
-        assertEquals(permissionResultEffects(granted = false), transition.effects)
+        assertEquals(NotificationPermissionPhase.Idle, transition.state.phase)
+        assertEquals(permissionResultCommands(granted = false), transition.commands)
     }
 
     @Test
@@ -145,15 +178,15 @@ class NotificationPermissionStateMachineTest {
         val transition =
             reduceNotificationPermissionState(
                 state =
-                    NotificationPermissionUiState(
-                        requestSource = NotificationPermissionRequestSource.Splash,
-                        splashPaused = true,
-                        permissionUiActive = true,
+                    state(
+                        phase =
+                            NotificationPermissionPhase.RequestingSystem(
+                                NotificationPermissionRequestSource.Splash,
+                            ),
                     ),
                 action =
-                    NotificationPermissionAction.PermissionResult(
-                        granted = false,
-                        shouldShowRationale = false,
+                    NotificationPermissionAction.SystemPermissionResult(
+                        facts = facts(shouldShowRationale = false),
                     ),
                 nowMillis = NOW,
             )
@@ -167,15 +200,15 @@ class NotificationPermissionStateMachineTest {
         val transition =
             reduceNotificationPermissionState(
                 state =
-                    NotificationPermissionUiState(
-                        requestSource = NotificationPermissionRequestSource.Splash,
-                        splashPaused = true,
-                        permissionUiActive = true,
+                    state(
+                        phase =
+                            NotificationPermissionPhase.RequestingSystem(
+                                NotificationPermissionRequestSource.Splash,
+                            ),
                     ),
                 action =
-                    NotificationPermissionAction.PermissionResult(
-                        granted = true,
-                        shouldShowRationale = false,
+                    NotificationPermissionAction.SystemPermissionResult(
+                        facts = facts(hasPermission = true),
                     ),
                 nowMillis = NOW,
             )
@@ -183,9 +216,8 @@ class NotificationPermissionStateMachineTest {
         assertTrue(transition.state.hasPermission)
         assertFalse(transition.state.permissionFlowActive)
         assertEquals(
-            permissionResultEffects(granted = true) +
-                NotificationPermissionSideEffect.Host(NotificationPermissionEffect.NotifyPermissionGranted),
-            transition.effects,
+            permissionResultCommands(granted = true),
+            transition.commands,
         )
     }
 
@@ -193,19 +225,23 @@ class NotificationPermissionStateMachineTest {
     fun `custom prompt commands settings and recovers when launch fails`() {
         val confirmed =
             reduceNotificationPermissionState(
-                state = homeState(customDialogVisible = true, permissionUiActive = true),
+                state =
+                    state(
+                        surface = NotificationPermissionSurface.Home,
+                        phase = NotificationPermissionPhase.ShowingCustomPrompt,
+                    ),
                 action = NotificationPermissionAction.CustomPromptConfirmed,
                 nowMillis = NOW,
             )
 
-        assertEquals(NotificationPermissionRequestSource.HomeCustom, confirmed.state.requestSource)
+        assertEquals(NotificationPermissionPhase.LaunchingSettings, confirmed.state.phase)
         assertTrue(confirmed.state.permissionUiActive)
         assertEquals(
             listOf(
-                NotificationPermissionSideEffect.TrackPopup(accepted = true),
-                NotificationPermissionSideEffect.Host(NotificationPermissionEffect.OpenAppSettings),
+                NotificationPermissionCommand.TrackPopup(accepted = true),
+                NotificationPermissionCommand.OpenAppSettings,
             ),
-            confirmed.effects,
+            confirmed.commands,
         )
 
         val launchFailed =
@@ -215,8 +251,7 @@ class NotificationPermissionStateMachineTest {
                 nowMillis = NOW,
             )
 
-        assertEquals(null, launchFailed.state.requestSource)
-        assertFalse(launchFailed.state.settingsLaunchPending)
+        assertEquals(NotificationPermissionPhase.Idle, launchFailed.state.phase)
         assertFalse(launchFailed.state.permissionUiActive)
     }
 
@@ -225,71 +260,102 @@ class NotificationPermissionStateMachineTest {
         val transition =
             reduceNotificationPermissionState(
                 state =
-                    homeState(
-                        hasPermission = true,
-                        requestSource = NotificationPermissionRequestSource.HomeCustom,
-                        settingsLaunchPending = true,
-                        permissionUiActive = true,
+                    state(
+                        surface = NotificationPermissionSurface.Home,
+                        facts = facts(hasPermission = true),
+                        phase = NotificationPermissionPhase.WaitingForSettingsReturn,
                     ),
                 action =
-                    NotificationPermissionAction.Refresh(
-                        returningFromSettings = true,
-                        shouldShowRationale = false,
+                    NotificationPermissionAction.AppResumed(
+                        facts = facts(hasPermission = true),
                     ),
                 nowMillis = NOW,
             )
 
         assertFalse(transition.state.permissionUiActive)
-        assertFalse(transition.state.settingsLaunchPending)
+        assertEquals(NotificationPermissionPhase.Idle, transition.state.phase)
         assertEquals(
             listOf(
-                NotificationPermissionSideEffect.TrackPermissionResult(granted = true),
-                NotificationPermissionSideEffect.Host(NotificationPermissionEffect.NotifyPermissionGranted),
+                NotificationPermissionCommand.TrackPermissionResult(granted = true),
+                NotificationPermissionCommand.NotifyPermissionGranted,
             ),
-            transition.effects,
+            transition.commands,
         )
     }
 
-    private fun visibility(
-        splash: Boolean = false,
-        home: Boolean = false,
-    ): NotificationPermissionAction.VisibilityChanged =
-        NotificationPermissionAction.VisibilityChanged(
-            isSplashVisible = splash,
-            isHomeVisible = home,
-            shouldShowRationale = false,
+    @Test
+    fun `leaving home closes custom prompt`() {
+        val transition =
+            reduceNotificationPermissionState(
+                state =
+                    state(
+                        surface = NotificationPermissionSurface.Home,
+                        phase = NotificationPermissionPhase.ShowingCustomPrompt,
+                    ),
+                action = surface(NotificationPermissionSurface.Other),
+                nowMillis = NOW,
+            )
+
+        assertEquals(NotificationPermissionPhase.Idle, transition.state.phase)
+        assertFalse(transition.state.customDialogVisible)
+    }
+
+    @Test
+    fun `permission flow is not active on other surfaces`() {
+        val state =
+            state(
+                surface = NotificationPermissionSurface.Other,
+                phase =
+                    NotificationPermissionPhase.RequestingSystem(
+                        NotificationPermissionRequestSource.HomeSystem,
+                    ),
+            )
+
+        assertFalse(state.permissionUiActive)
+        assertFalse(state.permissionFlowActive)
+    }
+
+    private fun surface(
+        surface: NotificationPermissionSurface,
+        hasRequestedBefore: Boolean = true,
+    ): NotificationPermissionAction.SurfaceChanged =
+        NotificationPermissionAction.SurfaceChanged(
+            surface = surface,
+            facts = facts(hasRequestedBefore = hasRequestedBefore),
         )
 
-    private fun homeState(
+    private fun facts(
         hasPermission: Boolean = false,
         hasRequestedBefore: Boolean = true,
         shouldShowRationale: Boolean = false,
         lastCustomPromptAt: Long = 0L,
-        customDialogVisible: Boolean = false,
-        requestSource: NotificationPermissionRequestSource? = null,
-        settingsLaunchPending: Boolean = false,
-        permissionUiActive: Boolean = false,
-        homeCustomPromptDeferred: Boolean = false,
-    ): NotificationPermissionUiState =
-        NotificationPermissionUiState(
-            isSplashVisible = false,
-            isHomeVisible = true,
+    ): NotificationPermissionFacts =
+        NotificationPermissionFacts(
             hasPermission = hasPermission,
             hasRequestedBefore = hasRequestedBefore,
             shouldShowRationale = shouldShowRationale,
             lastCustomPromptAt = lastCustomPromptAt,
-            customDialogVisible = customDialogVisible,
-            requestSource = requestSource,
-            settingsLaunchPending = settingsLaunchPending,
-            permissionUiActive = permissionUiActive,
-            homeCustomPromptDeferred = homeCustomPromptDeferred,
         )
 
-    private fun permissionResultEffects(granted: Boolean): List<NotificationPermissionSideEffect> =
-        listOf(
-            NotificationPermissionSideEffect.TrackPopup(accepted = granted),
-            NotificationPermissionSideEffect.TrackPermissionResult(granted = granted),
+    private fun state(
+        surface: NotificationPermissionSurface = NotificationPermissionSurface.Splash,
+        facts: NotificationPermissionFacts = facts(),
+        phase: NotificationPermissionPhase = NotificationPermissionPhase.Idle,
+        customPromptDeferredForSession: Boolean = false,
+    ): NotificationPermissionUiState =
+        NotificationPermissionUiState(
+            facts = facts,
+            surface = surface,
+            phase = phase,
+            customPromptDeferredForSession = customPromptDeferredForSession,
         )
+
+    private fun permissionResultCommands(granted: Boolean): List<NotificationPermissionCommand> =
+        buildList {
+            add(NotificationPermissionCommand.TrackPopup(accepted = granted))
+            add(NotificationPermissionCommand.TrackPermissionResult(granted = granted))
+            if (granted) add(NotificationPermissionCommand.NotifyPermissionGranted)
+        }
 
     private companion object {
         const val NOW = 1_700_000_000_000L

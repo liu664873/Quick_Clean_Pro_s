@@ -182,12 +182,17 @@ fun SplashScreen(
                     .scale(scaleAnim.value),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            CircularAppLogo(
+//            CircularAppLogo(
+//                contentDescription = null,
+//                modifier =
+//                    Modifier
+//                        .size(100.dp)
+//                        .border(1.35.dp, Color.White, CircleShape),
+//            )
+            Image(
+                painter = painterResource(R.drawable.app_logo),
                 contentDescription = null,
-                modifier =
-                    Modifier
-                        .size(100.dp)
-                        .border(1.35.dp, Color.White, CircleShape),
+                modifier = Modifier.size(121.dp)
             )
 
             Spacer(modifier = Modifier.height(20.dp))

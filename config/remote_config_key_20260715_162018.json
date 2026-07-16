@@ -1,0 +1,16 @@
+{
+  "keyId": "rc_2026_07_15_16_20_18",
+  "encryptionKeyBase64": "SvG2yY4oFSHoJswTxYud9sY1FLqi5KpTsrT9IF7xsv0=",
+  "encryptDecryptKeyBase64": "SvG2yY4oFSHoJswTxYud9sY1FLqi5KpTsrT9IF7xsv0=",
+  "algorithm": "AES-256-GCM",
+  "remoteConfigParameter": "remote_config_json",
+  "env": {
+    "REMOTE_CONFIG_ENCRYPTION_KEY": "SvG2yY4oFSHoJswTxYud9sY1FLqi5KpTsrT9IF7xsv0=",
+    "REMOTE_CONFIG_ENCRYPTION_KEY_ID": "rc_2026_07_15_16_20_18"
+  },
+  "buildConfigFields": {
+    "ADV_REMOTE_CONFIG_ENCRYPTION_KEY": "SvG2yY4oFSHoJswTxYud9sY1FLqi5KpTsrT9IF7xsv0=",
+    "ADV_REMOTE_CONFIG_ENCRYPTION_KEY_ID": "rc_2026_07_15_16_20_18"
+  },
+  "generatedAt": "2026-07-15T08:20:18.246Z"
+}

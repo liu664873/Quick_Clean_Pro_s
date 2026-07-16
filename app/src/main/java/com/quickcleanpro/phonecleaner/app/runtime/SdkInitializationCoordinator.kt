@@ -42,14 +42,14 @@ class SdkInitializationCoordinator(
             advertiseFinished.complete(Unit)
         }
         scope.launch {
-            awaitAdvertiseFinished()
+            awaitAdvertiseFinishedWithTimeout()
             runComponent(
                 component = SdkComponent.ANALYTICS,
                 initializer = analyticsInitializer,
             )
         }
         scope.launch {
-            awaitAdvertiseFinished()
+            advertiseFinished.await()
             runComponent(
                 component = SdkComponent.NOTIFICATION_DEFAULTS,
                 initializer = notificationDefaultsInitializer,
@@ -57,7 +57,7 @@ class SdkInitializationCoordinator(
         }
     }
 
-    private suspend fun awaitAdvertiseFinished() {
+    private suspend fun awaitAdvertiseFinishedWithTimeout() {
         withTimeoutOrNull(DEPENDENT_INITIALIZER_WAIT_MS) {
             advertiseFinished.await()
         }
@@ -68,17 +68,45 @@ class SdkInitializationCoordinator(
      * out; callers can inspect [state] for the failure cause.
      */
     suspend fun awaitAdvertiseReady(timeoutMillis: Long = DEFAULT_ADVERTISE_WAIT_MS): Boolean {
-        val current = state.value.advertise
-        if (current.status == InitializationStatus.SUCCEEDED) return true
-        if (current.status == InitializationStatus.FAILED || timeoutMillis <= 0L) return false
+        return awaitReady(timeoutMillis) { current ->
+            val advertise = current.advertise
+            when (advertise.status) {
+                InitializationStatus.SUCCEEDED -> ReadinessResult.Ready
+                InitializationStatus.FAILED -> ReadinessResult.Failed
+                else -> ReadinessResult.Waiting
+            }
+        }
+    }
+
+    suspend fun awaitNotificationDefaultsReady(
+        timeoutMillis: Long = DEFAULT_NOTIFICATION_DEFAULTS_WAIT_MS,
+    ): Boolean =
+        awaitReady(timeoutMillis) { current ->
+            val advertise = current.advertise.status
+            val notificationDefaults = current.notificationDefaults.status
+            when {
+                advertise == InitializationStatus.FAILED ||
+                    notificationDefaults == InitializationStatus.FAILED -> ReadinessResult.Failed
+                advertise == InitializationStatus.SUCCEEDED &&
+                    notificationDefaults == InitializationStatus.SUCCEEDED -> ReadinessResult.Ready
+                else -> ReadinessResult.Waiting
+            }
+        }
+
+    private suspend fun awaitReady(
+        timeoutMillis: Long,
+        evaluate: (AppSdkInitializationState) -> ReadinessResult,
+    ): Boolean {
+        when (evaluate(state.value)) {
+            ReadinessResult.Ready -> return true
+            ReadinessResult.Failed -> return false
+            ReadinessResult.Waiting -> if (timeoutMillis <= 0L) return false
+        }
         return try {
             withTimeoutOrNull(timeoutMillis) {
                 state
-                    .map { it.advertise }
-                    .first { component ->
-                        component.status == InitializationStatus.SUCCEEDED ||
-                            component.status == InitializationStatus.FAILED
-                    }.status == InitializationStatus.SUCCEEDED
+                    .map(evaluate)
+                    .first { it != ReadinessResult.Waiting } == ReadinessResult.Ready
             } ?: false
         } catch (error: CancellationException) {
             throw error
@@ -121,8 +149,15 @@ class SdkInitializationCoordinator(
         NOTIFICATION_DEFAULTS("Advertise notification defaults"),
     }
 
+    private enum class ReadinessResult {
+        Waiting,
+        Ready,
+        Failed,
+    }
+
     private companion object {
         const val DEFAULT_ADVERTISE_WAIT_MS = 6_500L
+        const val DEFAULT_NOTIFICATION_DEFAULTS_WAIT_MS = 15_000L
         const val DEPENDENT_INITIALIZER_WAIT_MS = 6_500L
     }
 }

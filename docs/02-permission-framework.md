@@ -2,280 +2,295 @@
 
 ## 1. 概述
 
-权限系统是一个通用的、类型参数化的框架，支持 **10 种权限类型** 和 **14 个受保护操作** 的双重维度管理。框架的核心设计遵循以下原则：
-
-- **类型安全**：通过泛型 `PermissionManager<F : PermissionFeature>` 确保编译期类型检查
-- **关注点分离**：权限检查逻辑、UI 对话框、系统交互各自独立
-- **组合优于继承**：通过 `CompositionLocal` 将协调器注入 Compose 树，各功能模块按需消费
-- **会话式状态机**：`PermissionSession` 追踪单个权限流程的完整生命周期
+权限系统支持 10 种权限类型和 14 个受保护操作。核心设计原则：
+- **关注点分离**：权限检查逻辑（PermissionEngine）、UI 对话框（QuickCleanProPermissionUi）、系统交互（PermissionPromptHost）各自独立
+- **CompositionLocal 注入**：通过 CompositionLocal 将 PermissionCoordinator 注入 Compose 树
+- **会话式状态机**：PermissionSession 追踪单个权限流程的完整生命周期
+- **MVI 驱动通知权限**：通知权限拥有独立的 MVI 状态机 (NotificationPermissionPolicy + NotificationPermissionViewModel)
 
 ---
 
 ## 2. 权限类型 (PermissionType)
 
-框架定义了 **10 种权限类型**，每种由对应的 `PermissionHandler` 实现类处理检查、请求和设置跳转。
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/PermissionType.kt
+
+10 种权限类型，每种由对应的 PermissionHandler 实现处理：
 
 | 类型 | 键值 | 保护的 Android 权限 / 能力 |
 |------|------|---------------------------|
-| `StorageFiles` | `storage_files` | `MANAGE_EXTERNAL_STORAGE` (Android R+) / `READ_EXTERNAL_STORAGE` + `WRITE_EXTERNAL_STORAGE` |
-| `MediaImages` | `media_images` | `READ_MEDIA_IMAGES` (Android 13+) |
-| `MediaImagesWithLocation` | `media_images_with_location` | `READ_MEDIA_IMAGES` + `ACCESS_MEDIA_LOCATION` (Android 13+) |
-| `MediaVideo` | `media_video` | `READ_MEDIA_VIDEO` (Android 13+) |
-| `MediaAudio` | `media_audio` | `READ_MEDIA_AUDIO` (Android 13+) |
-| `Location` | `location` | `ACCESS_FINE_LOCATION` |
-| `UsageAccess` | `usage_access` | `AppOpsManager.OPSTR_GET_USAGE_STATS` |
-| `NotificationListener` | `notification_listener` | `EnabledNotificationListeners` (Settings.Secure) |
-| `Overlay` | `overlay` | `SYSTEM_ALERT_WINDOW` |
-| `PostNotifications` | `post_notifications` | `POST_NOTIFICATIONS` (Android 13+) |
+| StorageFiles | storage_files | MANAGE_EXTERNAL_STORAGE (R+) / READ/WRITE_EXTERNAL_STORAGE |
+| MediaImages | media_images | READ_MEDIA_IMAGES (TIRAMISU+) |
+| MediaImagesWithLocation | media_images_with_location | READ_MEDIA_IMAGES + ACCESS_MEDIA_LOCATION |
+| MediaVideo | media_video | READ_MEDIA_VIDEO (TIRAMISU+) |
+| MediaAudio | media_audio | READ_MEDIA_AUDIO (TIRAMISU+) |
+| Location | location | ACCESS_FINE_LOCATION |
+| UsageAccess | usage_access | AppOpsManager.OPSTR_GET_USAGE_STATS |
+| NotificationListener | notification_listener | EnabledNotificationListeners (Settings.Secure) |
+| Overlay | overlay | SYSTEM_ALERT_WINDOW |
+| PostNotifications | post_notifications | POST_NOTIFICATIONS (TIRAMISU+) |
 
 ---
 
-## 3. 受保护操作 (CleanXProtectedAction)
+## 3. 受保护操作 (ProtectedAction)
 
-**14 个用户可见的功能操作**，每个操作映射到一个或多个所需权限。框架在执行操作前通过 `PermissionCoordinator` 确保所需权限均已授予。
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/PermissionModels.kt
 
-| 操作 | 所需权限 |
-|------|---------|
-| `JunkStartScan` | `StorageFiles` |
-| `JunkCleanSelected` | `StorageFiles` |
-| `FileManagerLoadFiles` | `StorageFiles` |
-| `FileManagerDeleteFiles` | `StorageFiles` |
-| `WhatsAppStartScan` | `StorageFiles` |
-| `WhatsAppCleanSelected` | `StorageFiles` |
-| `VirusDeepScanStart` | `StorageFiles` |
-| `NetworkScanStart` | `Location` |
-| `AppUsageLoadStats` | `UsageAccess` |
-| `NetworkUsageLoadStats` | `UsageAccess` |
-| `NotificationCleanerEnable` | `NotificationListener` |
-| `AppLockOpenProtectedArea` | `UsageAccess` |
-| `AppLockEnableMonitoring` | `UsageAccess` + `Overlay` |
-| `AppLockRequestOverlay` | `Overlay` |
-| `PostNotificationsEnable` | `PostNotifications` |
+ProtectedAction 是一个 enum，每个枚举值直接声明其 requiredPermissions：
 
-> **注意**：`AppLockEnableMonitoring` 是唯一需要 **多个权限** (`UsageAccess` + `Overlay`) 的操作，框架通过会话链式处理：授予第一个权限后自动进入第二个权限的请求流程。
+```kotlin
+enum class ProtectedAction(
+    val key: String,
+    val requiredPermissions: List<PermissionType>,
+) {
+    JunkStartScan("junk_start_scan", listOf(PermissionType.StorageFiles)),
+    JunkCleanSelected("junk_clean_selected", listOf(PermissionType.StorageFiles)),
+    FileManagerLoadFiles("file_manager_load_files", listOf(PermissionType.StorageFiles)),
+    FileManagerDeleteFiles("file_manager_delete_files", listOf(PermissionType.StorageFiles)),
+    WhatsAppStartScan("whatsapp_start_scan", listOf(PermissionType.StorageFiles)),
+    WhatsAppCleanSelected("whatsapp_clean_selected", listOf(PermissionType.StorageFiles)),
+    VirusDeepScanStart("virus_deep_scan_start", listOf(PermissionType.StorageFiles)),
+    NetworkScanStart("network_scan_start", listOf(PermissionType.Location)),
+    AppUsageLoadStats("app_usage_load_stats", listOf(PermissionType.UsageAccess)),
+    NetworkUsageLoadStats("network_usage_load_stats", listOf(PermissionType.UsageAccess)),
+    NotificationCleanerEnable("notification_cleaner_enable", listOf(PermissionType.NotificationListener)),
+    AppLockOpenProtectedArea("app_lock_open_protected_area", listOf(PermissionType.UsageAccess)),
+    AppLockEnableMonitoring("app_lock_enable_monitoring", listOf(PermissionType.UsageAccess, PermissionType.Overlay)),
+    AppLockRequestOverlay("app_lock_request_overlay", listOf(PermissionType.Overlay)),
+}
+```
+
+> **不再有独立的 CleanXPermissionRegistry 文件** —— action 到权限的映射直接在 ProtectedAction 枚举中声明。
+
+### PermissionTarget
+```kotlin
+sealed interface PermissionTarget {
+    val key: String
+    val requiredPermissions: List<PermissionType>
+    data class Action(val action: ProtectedAction) : PermissionTarget
+    data class Permission(val permission: PermissionType) : PermissionTarget
+}
+```
 
 ---
 
 ## 4. PermissionHandler 接口
 
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/PermissionHandler.kt
+
 ```kotlin
 interface PermissionHandler {
-    /**
-     * 同步检查当前权限是否已授予。
-     */
+    val permission: PermissionType  // 标识此 handler 处理的权限类型
+
     fun isGranted(context: Context): Boolean
-
-    /**
-     * 返回该权限所需的运行时权限列表。
-     * 例如 StorageFiles 可能返回空列表（当通过 MANAGE_ALL_FILES_ACCESS 处理时）。
-     */
     fun runtimePermissions(context: Context): List<String>
-
-    /**
-     * 返回引导用户前往系统设置页面的 Intent 列表。
-     * 某些权限可能需要多个设置步骤（例如 NotificationListener 需要先到达通知设置页）。
-     */
     fun settingsIntents(context: Context): List<Intent>
 }
 ```
 
-### 具体实现示例
+10 个实现类集中在 CommonPermissionHandlers.kt 一个文件中。
 
-框架包含 **10 个具体实现类**，每个对应一种权限类型。以 `StorageFiles` 为例，其 Handler 会根据 API 级别做版本适配：
-
-**文件路径**：`app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/handler/StorageFilesHandler.kt`
+### RuntimePermissionDenialStore 接口
 
 ```kotlin
-class StorageFilesHandler : PermissionHandler {
-    override fun isGranted(context: Context): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            ContextCompat.checkSelfPermission(context, READ_EXTERNAL_STORAGE) == GRANTED
-        }
-    }
-
-    override fun runtimePermissions(context: Context): List<String> {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            emptyList() // 通过 MANAGE_ALL_FILES_ACCESS 处理，不走运行时请求
-        } else {
-            listOf(READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE)
-        }
-    }
-
-    override fun settingsIntents(context: Context): List<Intent> {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            listOf(Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION))
-        } else {
-            listOf(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS))
-        }
-    }
+interface RuntimePermissionDenialStore {
+    fun hasDenied(permission: PermissionType): Boolean
+    fun markDenied(permission: PermissionType)
+    fun hasRequestedBefore(permission: PermissionType): Boolean = hasDenied(permission)
+    fun markRequested(permission: PermissionType) = Unit
+    fun shouldRequestRuntimePermission(
+        context: Context, permission: PermissionType, runtimePermissions: Array<String>
+    ): Boolean = !hasDenied(permission)
 }
 ```
 
+实现类 AppRuntimePermissionDenialStore 基于 PermissionPreferences 持久化。
+
 ---
 
-## 5. PermissionManager - 核心引擎
+## 5. PermissionEngine - 核心引擎
 
-**文件路径**：`app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/PermissionManager.kt`
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/PermissionEngine.kt
 
-泛型权限管理器，参数化在 `PermissionFeature` 上：
+PermissionEngine 替代了旧版文档中的 PermissionManager<F>。它是非泛型的，直接接收 List<PermissionType>：
 
 ```kotlin
-class PermissionManager<F : PermissionFeature> {
-
-    // ...
-}
+class PermissionEngine(
+    handlers: List<PermissionHandler> = commonPermissionHandlers(),
+    private val denialStore: RuntimePermissionDenialStore,
+    ...
+)
 ```
 
 ### 5.1 权限状态模型
 
 ```kotlin
-sealed class PermissionStatus {
-    object Granted : PermissionStatus()
-    data class Denied(
-        val permissions: List<PermissionType>,
-        val denialReasons: Map<PermissionType, DenialReason>
-    ) : PermissionStatus()
-}
-
-enum class DenialReason {
-    NOT_GRANTED,
-    PERMANENTLY_DENIED,
-    UNAVAILABLE
-}
+data class PermissionStatus(
+    val granted: Boolean,
+    val missing: List<PermissionType>,
+)
 ```
 
-### 5.2 核心方法
+### 5.2 决策模型
 
 ```kotlin
-// 检查全部权限的授予状态
-fun status(context: Context, feature: F): PermissionStatus
-
-// 决策引擎：返回下一步要执行的操作计划
-fun requestPlan(context: Context, feature: F): PermissionRequestPlan
-
-// 处理系统 Activity 回调结果
-fun onRuntimeResult(context: Context, feature: F, result: Map<String, Boolean>): PermissionRequestPlan
-
-// 跳过运行时请求，直接提供设置页跳转计划
-fun settingsPlan(context: Context, feature: F): PermissionRequestPlan
-```
-
-### 5.3 决策计划 (PermissionRequestPlan)
-
-```kotlin
-sealed class PermissionRequestPlan {
-    /** 所有权限已授予，无需任何操作 */
-    object AlreadyGranted : PermissionRequestPlan()
-
-    /** 通过系统运行时权限弹窗请求 */
-    data class RequestRuntime(val permissions: List<String>) : PermissionRequestPlan()
-
-    /** 跳转到系统设置页面 */
-    data class OpenSettings(val permission: PermissionType) : PermissionRequestPlan()
-
-    /** 当前设备/版本不支持该权限 */
-    object Unavailable : PermissionRequestPlan()
+sealed interface PermissionDecision {
+    data object Granted : PermissionDecision
+    data class RequestRuntime(val permissions: Array<String>) : PermissionDecision
+    data class OpenSettings(val intents: List<Intent>) : PermissionDecision
+    data object Unavailable : PermissionDecision
 }
 ```
 
-### 5.4 RuntimePermissionDenialStore
+### 5.3 核心方法
 
 ```kotlin
-object RuntimePermissionDenialStore {
-    // 追踪用户对运行时权限的拒绝状态，防止重复弹窗骚扰
-    // key: permission string, value: 是否已被永久拒绝
-}
+// 检查权限状态
+fun status(context: Context, requiredPermissions: List<PermissionType>): PermissionStatus
+
+// 决策引擎：计算下一步操作
+fun decide(context: Context, requiredPermissions: List<PermissionType>): PermissionDecision
+
+// 直接获取设置页决策（跳过运行时请求）
+fun settingsDecision(context: Context, permission: PermissionType): PermissionDecision
+
+// 处理运行时权限回调结果
+fun onRuntimeResult(result: Map<String, Boolean>)
 ```
 
-当用户首次拒绝运行时权限时，框架记录该状态；后续 `requestPlan()` 会根据是否曾被拒绝来决定返回 `RequestRuntime` 还是 `OpenSettings`。
+### 5.4 decide() 决策流程
+
+```
+1. 遍历 requiredPermissions → 找到第一个未授予的 PermissionType
+2. 获取该权限的 handler.runtimePermissions() → 过滤已授予的
+3. 如果还有未授予的运行时权限 且 denialStore 允许请求
+   → markRequested → 返回 RequestRuntime(permissions)
+4. 否则 → 返回 settingsDecision() → OpenSettings 或 Unavailable
+```
 
 ---
 
-## 6. CleanXPermissionCoordinator - 会话状态机
-
-**文件路径**：`app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/CleanXPermissionCoordinator.kt`
-
-协调器是功能模块与权限框架之间的主要对外接口。
+## 6. AppPermissionCoordinator 接口 + PermissionCoordinator 实现
 
 ### 6.1 接口定义
 
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/AppPermissionCoordinator.kt
+
 ```kotlin
-interface CleanXPermissionCoordinator {
-    /** 检查某个操作或权限项是否已授予 */
-    fun isGranted(target: PermissionTarget): Boolean
+interface AppPermissionCoordinator {
+    fun isGranted(permission: PermissionType): Boolean
 
-    /**
-     * 完整的权限保护流程：
-     * 创建 Session（弹窗） → 请求 → 重检 →
-     * onGranted 或 onRejected 回调
-     */
-    fun guard(
-        target: PermissionTarget,
-        onRejected: () -> Unit,
-        onGranted: () -> Unit
+    fun ensure(
+        action: ProtectedAction,
+        mode: PermissionPromptMode = PermissionPromptMode.Explained,
+        onDenied: () -> Unit = {},
+        onGranted: () -> Unit,
     )
 
-    /** 跳过对话框，直接进入系统请求流程 */
-    fun guardDirect(
-        target: PermissionTarget,
-        onRejected: () -> Unit,
-        onGranted: () -> Unit
+    fun ensure(
+        permission: PermissionType,
+        mode: PermissionPromptMode = PermissionPromptMode.Explained,
+        onDenied: () -> Unit = {},
+        onGranted: () -> Unit,
     )
 
-    /** 直接请求指定权限项 */
-    fun request(
-        item: PermissionType,
-        onRejected: () -> Unit,
-        onGranted: () -> Unit
-    )
-
-    /** 直接打开指定权限项的设置页面 */
     fun openSettings(
-        item: PermissionType,
-        onRejected: () -> Unit,
-        onGranted: () -> Unit
+        permission: PermissionType,
+        onReturn: () -> Unit = {},
     )
 }
 ```
 
-### 6.2 guard() 完整流程
+PermissionPromptMode 枚举:
+- `Explained`: 先显示解释弹窗，再进入系统请求流程
+- `Direct`: 跳过弹窗，直接进入系统请求
 
-```
-┌─────────────────────────────────────────────────────┐
-│  ① 业务层调用 coordinator.guard(action, ...)        │
-│     创建 PermissionSession (showDialog=true)         │
-│         ↓                                            │
-│  ② CleanXPermissionPromptHost 检测到 session         │
-│     根据权限类型选择并显示对应对话框                    │
-│         ↓                                            │
-│  ③ 用户点击"允许" → requestPlan()                    │
-│      ┌─ AlreadyGranted         → onGranted()         │
-│      ├─ RequestRuntime(perms)  → 调用系统弹窗         │
-│      ├─ OpenSettings(perm)     → 跳转系统设置         │
-│      └─ Unavailable            → onRejected()        │
-│         ↓                                            │
-│  ④ 系统回调 → recheckAfterPermissionReturn()         │
-│      ┌─ 全部授予               → onGranted()         │
-│      └─ 仍有拒绝               → onRejected()        │
-│         ↓                                            │
-│  ⑤ 多权限链式处理 (如 AppLock 的 UsageAccess+Overlay)│
-│     授予第一个后自动请求下一个 (showDialog=false)     │
-└─────────────────────────────────────────────────────┘
-```
+### 6.2 PermissionCoordinator 实现
 
-### 6.3 PermissionSession 状态
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/app/runtime/permission/PermissionCoordinator.kt
+
+PermissionCoordinator 是 AppPermissionCoordinator 的具体实现，同时维护会话状态：
 
 ```kotlin
-data class PermissionSession(
-    val id: String,
+internal class PermissionCoordinator(
+    private val context: Context,
+    private val engine: PermissionEngine,
+) : AppPermissionCoordinator {
+    var session by mutableStateOf<PermissionSession?>(null)
+    var pendingLaunch by mutableStateOf<PermissionLaunch?>(null)
+    // ...
+}
+```
+
+### 6.3 ensure() 完整流程
+
+```
+① 业务层调用 coordinator.ensure(action, mode=Explained, ...)
+   检查 status().granted → 已授予直接 onGranted()
+   创建 PermissionSession (showDialog = mode == Explained)
+
+② mode == Direct 时: 跳过弹窗，直接调用 launchDecision()
+   mode == Explained 时: 等待用户交互
+
+③ PermissionPromptHost 检测到 session.showDialog == true
+   渲染对应的权限解释弹窗
+
+④ 用户点击"允许" → onDialogSubmit()
+   调用 engine.decide():
+   ├─ Granted → finishIfGranted() → onGranted()
+   ├─ RequestRuntime → pendingLaunch + session.showDialog=false
+   │    → PermissionPromptHost 的 runtimeLauncher 调用系统弹窗
+   ├─ OpenSettings → queueSettings()
+   │    → PermissionPromptHost 的 settingsLauncher 跳转设置页
+   └─ Unavailable → dismissUnavailable() → onDenied()
+
+⑤ 系统回调:
+   运行时回调 → onRuntimeResult() → engine.onRuntimeResult()
+   设置返回 → onSettingsReturnIfReady()
+
+⑥ recheckAfterPermissionReturn():
+   ├─ Granted → onGranted()
+   ├─ Continue(nextMissingPermission) → 链式处理多权限
+   └─ Denied → onDenied()
+```
+
+### 6.4 PermissionSession
+
+```kotlin
+internal data class PermissionSession(
     val target: PermissionTarget,
-    val showDialog: Boolean,       // 是否显示前置解释弹窗
+    val missingPermission: PermissionType?,
     val onGranted: () -> Unit,
-    val onRejected: () -> Unit
+    val onDenied: () -> Unit,
+    val showDialog: Boolean = true,
+    val settingsLaunchPending: Boolean = false,
+    val settingsLaunchObservedPause: Boolean = false,
 )
 ```
+
+### 6.5 PermissionLaunch
+
+```kotlin
+internal sealed interface PermissionLaunch {
+    val target: PermissionTarget
+    data class Runtime(val target: PermissionTarget, val permissions: Array<String>) : PermissionLaunch
+    data class Settings(val target: PermissionTarget, val intents: List<Intent>) : PermissionLaunch
+}
+```
+
+### 6.6 PermissionRecheckDecision
+
+```kotlin
+internal sealed interface PermissionRecheckDecision {
+    data object Granted : PermissionRecheckDecision
+    data class Continue(val missingPermission: PermissionType) : PermissionRecheckDecision
+    data object Denied : PermissionRecheckDecision
+}
+```
+
+resolvePermissionRecheck() 纯函数:
+- 全部授予 → Granted
+- 还有一个不同的权限缺失 → Continue (链式处理)
+- 同一权限仍被拒绝 → Denied
 
 ---
 
@@ -283,394 +298,368 @@ data class PermissionSession(
 
 ### 7.1 CompositionLocal 注入
 
-框架通过 Compose 的 `CompositionLocal` 机制将协调器注入整个 Compose 树：
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/ui/PermissionCompositionLocal.kt
 
 ```kotlin
-// 文件：app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/ui/...
-val LocalPermissionCoordinator = staticCompositionLocalOf<CleanXPermissionCoordinator> {
-    error("CleanXPermissionCoordinator not provided")
-}
-```
-
-功能模块通过以下方式获取协调器：
-
-```kotlin
-@Composable
-fun SomeFeatureScreen() {
-    val coordinator = LocalPermissionCoordinator.current
-
-    Button(onClick = {
-        coordinator.guard(
-            target = PermissionTarget.Action(CleanXProtectedAction.JunkStartScan),
-            onRejected = { /* 显示被拒绝提示 */ },
-            onGranted = { startScan() }
-        )
-    }) {
-        Text("开始扫描")
+val LocalPermissionCoordinator =
+    staticCompositionLocalOf<AppPermissionCoordinator> {
+        error("Permission coordinator is not available")
     }
-}
 ```
 
-### 7.2 对话框分发 (QuickCleanProPermissionUi.PermissionPrompt)
+功能模块使用:
+```kotlin
+val coordinator = LocalPermissionCoordinator.current
+coordinator.ensure(
+    action = ProtectedAction.JunkStartScan,
+    onDenied = { /* 提示 */ },
+    onGranted = { startScan() }
+)
+```
 
-根据权限类型和操作类型，框架会显示不同的对话框：
+### 7.2 PermissionObservation
+
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/ui/PermissionObservation.kt
+
+rememberPermissionGranted() Composable: 在 ON_RESUME 时自动刷新指定权限的状态，用于设置页等需要实时反映权限状态的场景。
+
+### 7.3 对话框分发 (QuickCleanProPermissionUi.PermissionPrompt)
+
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/common/ui/permission/QuickCleanProPermissionUi.kt
 
 ```kotlin
-fun PermissionPrompt(session: PermissionSession) {
+fun PermissionPrompt(
+    request: PermissionPromptRequest,
+    onSubmit: () -> Unit,
+    onDismiss: () -> Unit,
+) {
     when {
-        // 通知清理 → 特殊引导弹窗
-        session is NotificationCleaner + NotificationListener ->
-            NotificationListenerEnableGuide()
+        // 通知清理 + NotificationListener → 特殊引导弹窗
+        request is NotificationCleaner + NotificationListener ->
+            NotificationEnableGuideDialog(...)
 
         // UsageAccess → AppLock 专用弹窗
-        session.requiredPermission == UsageAccess ->
-            AppLockUsageAccessPermissionDialog()
+        request.missingPermission == UsageAccess ->
+            AppLockUsageAccessPermissionDialog(...)
 
         // Overlay → AppLock 浮窗权限弹窗
-        session.requiredPermission == Overlay ->
-            AppLockOverlayPermissionDialog()
+        request.missingPermission == Overlay ->
+            AppLockOverlayPermissionDialog(...)
 
-        // 默认 → 通用权限请求弹窗（通过 CleanXPermissionCopy 获取文案）
-        else -> CleanXPermissionRequiredDialog(session)
+        // 默认 → 通用权限请求弹窗
+        else -> CleanXPermissionRequiredDialog(request, onSubmit, onDismiss)
     }
 }
 ```
 
-### 7.3 CleanXPermissionPromptHost
+### 7.4 PermissionPromptHost
 
-**文件路径**：`app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/ui/PermissionPromptHost.kt`
-
-核心 Host Composable，负责：
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/app/runtime/permission/PermissionPromptHost.kt
 
 ```kotlin
 @Composable
-fun CleanXPermissionPromptHost(
-    state: CleanXPermissionCoordinatorState,
-    // ...
+internal fun PermissionPromptHost(
+    state: PermissionCoordinator,
+    externalActivityLauncher: ExternalActivityLauncher,
+    permissionPrompt: @Composable (
+        request: PermissionPromptRequest,
+        onSubmit: () -> Unit,
+        onDismiss: () -> Unit,
+    ) -> Unit,
+)
+```
+
+核心能力:
+- runtimeLauncher: RequestMultiplePermissions 注册和回调
+- settingsLauncher: StartActivityForResult 注册和回调
+- 生命周期: ON_PAUSE/ON_STOP → markSettingsLaunchObservedPause(), ON_RESUME → settingsReturnGeneration++
+- LaunchedEffect(state.pendingLaunch): 消费 pendingLaunch 执行系统操作
+- LaunchedEffect(settingsReturnGeneration): 触发 onSettingsReturnIfReady()
+- 当 session.showDialog == true 时渲染 permissionPrompt()
+
+### 7.5 AppPermissionHost
+
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/app/runtime/permission/AppPermissionHost.kt
+
+顶层 Composable，在 AppRoot 中包裹 NavGraph:
+
+```kotlin
+@Composable
+internal fun AppPermissionHost(
+    externalActivityLauncher: ExternalActivityLauncher,
+    onPermissionFlowActiveChange: (Boolean) -> Unit,
+    content: @Composable () -> Unit,
 ) {
-    // ① 注册系统运行时权限 launcher
-    val runtimeLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { result -> state.onRuntimeResult(result) }
+    val context = LocalContext.current
+    val permissionPreferences = koinInject<PermissionPreferences>()
 
-    // ② 注册设置页 launcher
-    val settingsLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { state.onSettingsReturn() }
+    // ① 创建 PermissionEngine (单例)
+    val engine = remember(permissionPreferences) {
+        PermissionEngine(denialStore = AppRuntimePermissionDenialStore(permissionPreferences))
+    }
 
-    // ③ ON_RESUME 时触发 settingsReturnGeneration++
-    //    用于区分"从设置返回"和常规 resume
-    DisposableEffect(Unit) { /* lifecycle observer */ }
+    // ② 创建 PermissionCoordinator
+    val coordinator = remember(context, engine) {
+        PermissionCoordinator(context, engine)
+    }
 
-    // ④ LaunchedEffect 监听 pendingLaunch 执行系统操作
-    LaunchedEffect(state.pendingLaunch) {
-        when (val plan = state.pendingLaunch) {
-            is RequestRuntime -> runtimeLauncher.launch(plan.permissions.toTypedArray())
-            is OpenSettings -> settingsLauncher.launch(plan.intent)
-            // ...
-        }
+    // ③ 通知权限流程状态变化
+    LaunchedEffect(coordinator.session != null) {
+        onPermissionFlowActiveChange(coordinator.session != null)
+    }
+
+    // ④ 通过 CompositionLocal 提供
+    CompositionLocalProvider(LocalPermissionCoordinator provides coordinator) {
+        content()
+        // ⑤ 渲染 PermissionPromptHost
+        PermissionPromptHost(
+            state = coordinator,
+            externalActivityLauncher = externalActivityLauncher,
+            permissionPrompt = QuickCleanProPermissionUi::PermissionPrompt,
+        )
     }
 }
 ```
 
-### 7.4 AppPermissionHost
-
-**文件路径**：`app/src/main/java/com/quickcleanpro/phonecleaner/app/runtime/permission/AppPermissionHost.kt`
-
-顶层 Composable，在 `AppRoot` 中包裹 `NavGraph`：
-
-```kotlin
-@Composable
-fun AppPermissionHost(content: @Composable () -> Unit) {
-    // ① 创建 Action Manager 和 Item Manager
-    val actionManager = remember { PermissionManager<CleanXProtectedAction>() }
-    val itemManager = remember { PermissionManager<PermissionType>() }
-
-    // ② 创建协调器状态（管理 session 队列、pending launch）
-    val coordinatorState = remember {
-        CleanXPermissionCoordinatorState(actionManager, itemManager)
-    }
-
-    // ③ 通过 CompositionLocal 提供协调器
-    CompositionLocalProvider(
-        LocalPermissionCoordinator provides coordinatorState.coordinator
-    ) {
-        // ④ 内嵌 PermissionPromptHost 以处理对话框和系统交互
-        CleanXPermissionPromptHost(
-            state = coordinatorState,
-            /* ... */
-        ) {
-            // ⑤ 通知外部权限流程状态变化（如暂停 splash 动画）
-            OnPermissionFlowActiveChange { active ->
-                // 暂停/恢复外部 UI
-            }
-
-            content()
-        }
-    }
-}
-```
+> **关键变化**: AppPermissionHost 不再创建 actionManager/itemManager 两个分离的 Manager，而是创建一个 PermissionEngine 和一个 PermissionCoordinator。
 
 ---
 
 ## 8. 通知权限专用子系统
 
-`POST_NOTIFICATIONS` 拥有一个独立的子系统，因为它需要在 Splash 和 Home 两个不同的入口时机触发，且需要更精细的冷却和频控。
+POST_NOTIFICATIONS 拥有独立的 MVI 子系统，因为在 Splash 和 Home 两个不同时机触发，需要更精细的冷却和频控。
 
 ### 8.1 架构组件
 
 | 组件 | 文件路径 | 职责 |
 |------|---------|------|
-| `NotificationPermissionContract` | `.../permission/notification/NotificationPermissionContract.kt` | 定义包含 26 个字段的 `UiState` data class |
-| `NotificationPermissionStateMachine` | `.../permission/notification/NotificationPermissionStateMachine.kt` | Pure function reducer，状态转换逻辑 |
-| `NotificationPermissionViewModel` | `.../permission/notification/NotificationPermissionViewModel.kt` | MVI ViewModel，协调事件和状态 |
-| `NotificationPermissionHost` | `.../permission/notification/NotificationPermissionHost.kt` | Compose Host，渲染 UI 和绑定生命周期 |
+| PermissionPreferences | `common/permission/PermissionPreferences.kt` | 持久化存储 |
+| NotificationPermissionPolicy | `app/runtime/permission/NotificationPermissionPolicy.kt` | MVI 类型 (UiState/Action/Effect/SideEffect) + reducer |
+| NotificationPermissionViewModel | `app/runtime/permission/NotificationPermissionViewModel.kt` | ViewModel (snapshot刷新 + reducer + 副作用处理) |
+| NotificationPermissionHost | `app/runtime/permission/NotificationPermissionHost.kt` | Compose Host (路由感知 + 系统交互) |
 
-### 8.2 UiState (26 字段)
+### 8.2 NotificationPermissionPolicy - MVI 类型
 
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/app/runtime/permission/NotificationPermissionPolicy.kt
+
+**NotificationPermissionSnapshot** (外部事实):
 ```kotlin
-data class NotificationPermissionUiState(
-    val permissionGranted: Boolean,
-    val showRationaleDialog: Boolean,
-    val showSystemDialog: Boolean,
-    val dailyDialogCount: Int,
-    val cooldownRemaining: Long,
-    val splashVisible: Boolean,
-    val homeVisible: Boolean,
-    // ...共 26 个字段
+data class NotificationPermissionSnapshot(
+    val hasPermission: Boolean,
+    val hasRequestedBefore: Boolean,
+    val shouldShowRationale: Boolean,
+    val lastCustomPromptAt: Long,
 )
 ```
 
-### 8.3 关键流程
+**NotificationPermissionUiState** (12 个字段):
+- isSplashVisible, isHomeVisible: 当前页面可见性
+- hasPermission, hasRequestedBefore, shouldShowRationale: 权限事实
+- lastCustomPromptAt: 上次自定义弹窗时间
+- customDialogVisible: 自定义弹窗是否可见
+- requestSource: 当前请求来源 (Splash/HomeSystem/HomeCustom)
+- settingsLaunchPending: 设置页跳转中
+- suppressHomePromptUntilMillis: Home 提示冷却时间
+- splashPaused: Splash 是否暂停
+- permissionUiActive: 权限 UI 是否活跃
+- homeCustomPromptDeferred: Home 自定义弹窗已延期
 
-```
-场景 A: Splash 可见时
-┌──────────────────────────────────────┐
-│ ① Splash 动画播放中                   │
-│ ② 子系统触发权限请求                   │
-│ ③ 暂停 Splash 动画                    │
-│ ④ 调用系统 POST_NOTIFICATIONS 弹窗    │
-│ ⑤ 回调后恢复 Splash 动画              │
-└──────────────────────────────────────┘
+**NotificationPermissionAction** (9 种):
+- VisibilityChanged: Splash/Home 可见性变化
+- Refresh: 系统权限状态刷新
+- PermissionResult: 系统权限回调结果
+- HomePromptDelayElapsed / HomePromptCooldownElapsed: 定时器触发
+- CustomPromptConfirmed / CustomPromptDismissed: 自定义弹窗交互
+- SettingsLaunchResult: 设置页跳转结果
 
-场景 B: Home 可见时
-┌──────────────────────────────────────┐
-│ ① 检查是否在 5s cooldown 冷却期       │
-│ ② 评估 rationale:                     │
-│    ├─ 应显示 rationale → 自定义弹窗    │
-│    │    (每日最多 1 次)                │
-│    └─ 不应显示 rationale → 直接系统弹窗│
-└──────────────────────────────────────┘
+**NotificationPermissionEffect** (3 种):
+- RequestSystemPermission(source): 请求系统权限弹窗
+- OpenAppSettings: 打开应用设置页
+- NotifyPermissionGranted: 通知权限已授予
 
-场景 C: 从设置页返回
-┌──────────────────────────────────────┐
-│ ON_RESUME → 立即刷新权限状态           │
-└──────────────────────────────────────┘
-```
+**NotificationPermissionSideEffect** (5 种内部副作用):
+- SaveRequestedBefore: 持久化已请求状态
+- SaveLastCustomPromptAt: 持久化自定义弹窗时间
+- TrackPopup(accepted): 埋点弹窗
+- TrackPermissionResult(granted): 埋点权限结果
+- Host(effect): 转发给 UI 层
+
+### 8.3 状态机关键逻辑
+
+**Splash 场景**:
+1. Splash 可见 → VisibilityChanged
+2. 未授权 + 未请求过 + 无活跃请求
+   → 标记 hasRequestedBefore=true + splashPaused=true
+   → 发出 RequestSystemPermission(Splash)
+3. 系统回调 → PermissionResult → NotifyPermissionGranted 或解除暂停
+
+**Home 场景 (核心 refreshPermission 逻辑)**:
+1. Home 可见 → VisibilityChanged → refreshPermission
+2. 已授权 → 清理所有状态 + NotifyPermissionGranted
+3. 有 shouldShowRationale → 标记请求来源 + 5s cooldown → RequestSystemPermission(HomeSystem)
+4. 无 rationale + 自定义弹窗未延期 + 每日一次限制 → 显示自定义弹窗
+5. 自定义弹窗确认 → OpenAppSettings → 设置页返回 → Refresh → NotifyPermissionGranted 或继续
+
+**自定义弹窗频控**: canShowNotificationPermissionCustomPrompt() 使用 Calendar 比较日期间隔，每日最多一次。
+
+### 8.4 NotificationPermissionViewModel
+
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/app/runtime/permission/NotificationPermissionViewModel.kt
+
+核心设计:
+- Android 13+ 才启用 (runtimePermissionRequired)
+- 每次 onAction 前调用 refreshSnapshot() 从系统/持久化同步最新事实
+- reducer 计算新状态 + 副作用列表
+- handleSideEffect() 分类处理: 内部副作用直接执行, Host 副作用通过 effectsChannel 转发 UI
+- currentNoticeFlag(): 埋点场景标识 (1=Splash, 2=常规, 3=已完成清理)
 
 ---
 
 ## 9. 权限分析埋点
 
-`PermissionAnalytics` 负责追踪权限流程中的关键事件，当前聚焦于 `StorageFiles` 相关操作。
-
-**文件路径**：`app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/analytics/PermissionAnalytics.kt`
+文件: app/src/main/java/com/quickcleanpro/phonecleaner/app/runtime/permission/PermissionAnalytics.kt
 
 ```kotlin
-object PermissionAnalytics {
-    /**
-     * 弹窗接受：用户在权限解释弹窗点击"允许"
-     */
-    fun trackFileManagerPopup(accepted: Boolean) {
-        // 埋点上报："file_permission_popup" + accepted 状态
-    }
-
-    /**
-     * 弹窗拒绝：用户在权限解释弹窗点击"拒绝" 或 "取消"
-     * 同时触发 trackFileManagerPopup(accepted=false)
-     */
-    fun trackFilePermissionResult(granted: Boolean) {
-        // 埋点上报："file_permission_result" + granted 状态
-    }
+internal object PermissionAnalytics {
+    fun trackDialogAccepted(target: PermissionTarget)  // StorageFiles 弹窗接受
+    fun trackDismissed(target: PermissionTarget, dialogVisible: Boolean)  // 弹窗拒绝
+    fun trackGranted(target: PermissionTarget)  // 权限最终授予
 }
 ```
 
-### 埋点事件流
-
-```
-用户操作 → 弹窗出现
-    ├─ 接受 → trackFileManagerPopup(accepted=true) → 系统弹窗 → 授予
-    │         └→ trackFilePermissionResult(granted=true)
-    └─ 拒绝 → trackFileManagerPopup(accepted=false)
-               └→ trackFilePermissionResult(granted=false)
-```
+仅对 StorageFiles 相关 target 上报，其他权限类型不埋点。
 
 ---
 
-## 10. CleanXPermissionRegistry
-
-**文件路径**：`app/src/main/java/com/quickcleanpro/phonecleaner/common/permission/CleanXPermissionRegistry.kt`
-
-注册中心负责将所有权限相关的规格说明集中管理。
-
-### 10.1 Action Spec 注册
-
-```kotlin
-object CleanXPermissionRegistry {
-    val actionSpecs: Map<CleanXProtectedAction, ActionSpec> = mapOf(
-        JunkStartScan to ActionSpec(requiredPermissions = listOf(StorageFiles)),
-        JunkCleanSelected to ActionSpec(requiredPermissions = listOf(StorageFiles)),
-        FileManagerLoadFiles to ActionSpec(requiredPermissions = listOf(StorageFiles)),
-        FileManagerDeleteFiles to ActionSpec(requiredPermissions = listOf(StorageFiles)),
-        WhatsAppStartScan to ActionSpec(requiredPermissions = listOf(StorageFiles)),
-        WhatsAppCleanSelected to ActionSpec(requiredPermissions = listOf(StorageFiles)),
-        VirusDeepScanStart to ActionSpec(requiredPermissions = listOf(StorageFiles)),
-        NetworkScanStart to ActionSpec(requiredPermissions = listOf(Location)),
-        AppUsageLoadStats to ActionSpec(requiredPermissions = listOf(UsageAccess)),
-        NetworkUsageLoadStats to ActionSpec(requiredPermissions = listOf(UsageAccess)),
-        NotificationCleanerEnable to ActionSpec(requiredPermissions = listOf(NotificationListener)),
-        AppLockOpenProtectedArea to ActionSpec(requiredPermissions = listOf(UsageAccess)),
-        AppLockEnableMonitoring to ActionSpec(requiredPermissions = listOf(UsageAccess, Overlay)),
-        AppLockRequestOverlay to ActionSpec(requiredPermissions = listOf(Overlay)),
-        PostNotificationsEnable to ActionSpec(requiredPermissions = listOf(PostNotifications)),
-    )
-
-    val itemSpecs: Map<PermissionType, ItemSpec> = mapOf(
-        StorageFiles to ItemSpec(handlerFactory = { StorageFilesHandler() }),
-        MediaImages to ItemSpec(handlerFactory = { MediaImagesHandler() }),
-        MediaImagesWithLocation to ItemSpec(handlerFactory = { MediaImagesWithLocationHandler() }),
-        MediaVideo to ItemSpec(handlerFactory = { MediaVideoHandler() }),
-        MediaAudio to ItemSpec(handlerFactory = { MediaAudioHandler() }),
-        Location to ItemSpec(handlerFactory = { LocationHandler() }),
-        UsageAccess to ItemSpec(handlerFactory = { UsageAccessHandler() }),
-        NotificationListener to ItemSpec(handlerFactory = { NotificationListenerHandler() }),
-        Overlay to ItemSpec(handlerFactory = { OverlayHandler() }),
-        PostNotifications to ItemSpec(handlerFactory = { PostNotificationsHandler() }),
-    )
-}
-```
-
-### 10.2 Manager 工厂方法
-
-```kotlin
-fun actionManager(): PermissionManager<CleanXProtectedAction> {
-    return PermissionManager(actionSpecs, itemSpecs)
-}
-
-fun itemManager(): PermissionManager<PermissionType> {
-    return PermissionManager(itemSpecs)
-}
-```
-
----
-
-## 11. 架构总览
+## 10. 架构总览
 
 ```
 ┌──────────────────────────────────────────────────────────┐
 │                     AppPermissionHost                      │
 │  ┌──────────────────────────────────────────────────────┐ │
-│  │            CompositionLocalProvider                   │ │
-│  │  ┌──────────────────────────────────────────────────┐ │ │
-│  │  │           CleanXPermissionPromptHost              │ │ │
-│  │  │  ┌─────────────┐  ┌──────────────┐              │ │ │
-│  │  │  │ runtime     │  │ settings     │              │ │ │
-│  │  │  │ Launcher    │  │ Launcher     │              │ │ │
-│  │  │  └─────────────┘  └──────────────┘              │ │ │
-│  │  │  ┌──────────────────────────────────────────────┐│ │ │
-│  │  │  │          PermissionPrompt (Dialog)           ││ │ │
-│  │  │  └──────────────────────────────────────────────┘│ │ │
-│  │  └──────────────────────────────────────────────────┘ │ │
-│  │  ┌──────────────────────────────────────────────────┐ │ │
-│  │  │   CleanXPermissionCoordinatorState               │ │ │
-│  │  │   ┌────────────────┐  ┌──────────────────┐       │ │ │
-│  │  │   │ Permission     │  │ Permission       │       │ │ │
-│  │  │   │ Manager<Action>│  │ Manager<Item>    │       │ │ │
-│  │  │   └────────────────┘  └──────────────────┘       │ │ │
-│  │  │   ┌──────────────────────────────────────────────┐│ │ │
-│  │  │   │      CleanXPermissionRegistry                ││ │ │
-│  │  │   │  actionSpecs  +  itemSpecs                   ││ │ │
-│  │  │   └──────────────────────────────────────────────┘│ │ │
-│  │  └──────────────────────────────────────────────────┘ │ │
+│  │          CompositionLocalProvider                     │ │
+│  │  ┌──────────────────────────────────────────────────┐│ │
+│  │  │            PermissionPromptHost                   ││ │
+│  │  │  ┌─────────────┐  ┌──────────────┐              ││ │
+│  │  │  │ runtime     │  │ settings     │              ││ │
+│  │  │  │ Launcher    │  │ Launcher     │              ││ │
+│  │  │  └─────────────┘  └──────────────┘              ││ │
+│  │  │  ┌──────────────────────────────────────────────┐││ │
+│  │  │  │  QuickCleanProPermissionUi.PermissionPrompt  │││ │
+│  │  │  │  (Dialog dispatch)                            │││ │
+│  │  │  └──────────────────────────────────────────────┘││ │
+│  │  └──────────────────────────────────────────────────┘│ │
+│  │  ┌──────────────────────────────────────────────────┐│ │
+│  │  │           PermissionCoordinator                   ││ │
+│  │  │   session: PermissionSession?                     ││ │
+│  │  │   pendingLaunch: PermissionLaunch?                ││ │
+│  │  │   ┌─────────────────────────────────────────────┐││ │
+│  │  │   │           PermissionEngine                  │││ │
+│  │  │   │  status() / decide() / onRuntimeResult()    │││ │
+│  │  │   │  denialStore: AppRuntimePermissionDenialStore│││ │
+│  │  │   │  handlers: commonPermissionHandlers()       │││ │
+│  │  │   └─────────────────────────────────────────────┘││ │
+│  │  │   ┌─────────────────────────────────────────────┐││ │
+│  │  │   │         PermissionAnalytics                 │││ │
+│  │  │   └─────────────────────────────────────────────┘││ │
+│  │  └──────────────────────────────────────────────────┘│ │
 │  └──────────────────────────────────────────────────────┘ │
 │                         ↓                                  │
 │  ┌──────────────────────────────────────────────────────┐ │
 │  │               Feature Modules (NavGraph)              │ │
-│  │  ┌──────────┐ ┌──────────┐ ┌──────────────────────┐ │ │
-│  │  │ Junk     │ │ File     │ │ AppLock /            │ │ │
-│  │  │ Cleaner  │ │ Manager  │ │ NotificationCleaner  │ │ │
-│  │  └──────────┘ └──────────┘ └──────────────────────┘ │ │
-│  │         ↓              ↓              ↓              │ │
-│  │  coordinator.guard(action, onRejected, onGranted)    │ │
+│  │  coordinator.ensure(action, onDenied=..., onGranted=...)│
 │  └──────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 12. 使用示例
+## 11. 使用示例
 
-### 示例 1：保护单个功能入口
+### 示例 1：保护功能入口 (Explained 模式)
 
 ```kotlin
-@Composable
-fun JunkCleanerEntry(
-    onNavigateToScanner: () -> Unit,
-    coordinator: CleanXPermissionCoordinator = LocalPermissionCoordinator.current
-) {
-    val context = LocalContext.current
-
-    Button(onClick = {
-        coordinator.guard(
-            target = PermissionTarget.Action(CleanXProtectedAction.JunkStartScan),
-            onRejected = {
-                Toast.makeText(context, "需要存储权限才能扫描垃圾文件", Toast.LENGTH_SHORT).show()
-            },
-            onGranted = onNavigateToScanner
-        )
-    }) {
-        Text("垃圾清理")
-    }
-}
+val coordinator = LocalPermissionCoordinator.current
+coordinator.ensure(
+    action = ProtectedAction.JunkStartScan,
+    mode = PermissionPromptMode.Explained,
+    onDenied = { Toast.makeText(context, "需要存储权限", Toast.LENGTH_SHORT).show() },
+    onGranted = { startScan() }
+)
 ```
 
-### 示例 2：直接请求指定权限项
+### 示例 2：直接请求系统权限 (Direct 模式)
 
 ```kotlin
-fun enableNotificationCleaning(coordinator: CleanXPermissionCoordinator) {
-    coordinator.request(
-        item = PermissionType.NotificationListener,
-        onRejected = { /* 用户未授予通知监听权限 */ },
-        onGranted = { /* 开始清理通知 */ }
-    )
-}
+coordinator.ensure(
+    action = ProtectedAction.JunkStartScan,
+    mode = PermissionPromptMode.Direct,
+    onDenied = { /* 降级处理 */ },
+    onGranted = { startScan() }
+)
 ```
 
 ### 示例 3：检查权限状态
 
 ```kotlin
-if (coordinator.isGranted(PermissionTarget.Item(PermissionType.UsageAccess))) {
-    // 已有使用情况访问权限，直接加载数据
+if (coordinator.isGranted(PermissionType.UsageAccess)) {
     loadUsageStats()
 } else {
-    // 需要先请求权限
-    coordinator.guardDirect(
-        target = PermissionTarget.Item(PermissionType.UsageAccess),
-        onRejected = { /* fallback */ },
+    coordinator.ensure(
+        permission = PermissionType.UsageAccess,
+        onDenied = { /* fallback */ },
         onGranted = { loadUsageStats() }
     )
 }
 ```
 
+### 示例 4：打开设置页
+
+```kotlin
+coordinator.openSettings(
+    permission = PermissionType.StorageFiles,
+    onReturn = { refreshPermissionStatus() }
+)
+```
+
 ---
 
-## 13. 关键设计决策
+## 12. 关键设计决策
 
 | 决策 | 理由 |
 |------|------|
-| 泛型 `PermissionManager<F>` | 允许 Action (CleanXProtectedAction) 和 Item (PermissionType) 共用同一套检查/请求逻辑，避免代码重复 |
-| `PermissionSession` 状态机 | 将异步流程（弹窗 → 用户响应 → 系统回调 → 重检）转化为可追踪的状态序列，便于测试和调试 |
-| `CompositionLocal` 注入 | 避免 Prop Drilling，各功能模块无需通过层层参数传递协调器 |
-| 多权限链式处理 | `AppLockEnableMonitoring` 需要 `UsageAccess` + `Overlay`，框架在授予第一个后自动推进到下一个，无需业务层处理复杂性 |
-| 通知权限独立子系统 | `POST_NOTIFICATIONS` 需要在 Splash/Home 两个不同时机触发，且有冷却和频控需求，独立 MVI 架构更清晰 |
-| `RuntimePermissionDenialStore` | 追踪用户拒绝行为，避免重复弹出运行时权限对话框骚扰用户 |
+| PermissionEngine 非泛型 | 实际使用中总是针对 List<PermissionType> 操作，泛型增加了不必要的复杂度 |
+| ProtectedAction 枚举内联权限映射 | 避免单独的 Registry 文件，减少层级，action 和权限的关联关系一目了然 |
+| PermissionPromptMode (Explained/Direct) | 用单一 ensure() 方法 + mode 参数替代 guard()/guardDirect()/request() 三个方法 |
+| PermissionCoordinator 直接维护 session | 不再分离为接口+状态实现，简化了架构层级 |
+| 通知权限独立 MVI | POST_NOTIFICATIONS 需要在 Splash/Home 两个时机触发，有冷却和频控需求，独立子系统更清晰 |
+| RuntimePermissionDenialStore 接口 | 通过接口抽象，方便单元测试时 mock；实际使用 AppRuntimePermissionDenialStore 基于 PermissionPreferences 持久化 |
+| PermissionPromptHost 接收 composable lambda | 而非直接渲染对话框，使得具体的对话框分发逻辑可替换 |
+
+---
+
+## 13. 文件索引
+
+| 文件 | 包路径 |
+|------|-------|
+| PermissionType.kt | common/permission/ |
+| PermissionModels.kt | common/permission/ |
+| PermissionHandler.kt | common/permission/ |
+| CommonPermissionHandlers.kt | common/permission/ |
+| PermissionEngine.kt | common/permission/ |
+| AppPermissionCoordinator.kt | common/permission/ |
+| PermissionPreferences.kt | common/permission/ |
+| PermissionPromptRequest.kt | common/permission/ |
+| PermissionCompositionLocal.kt | common/permission/ui/ |
+| PermissionObservation.kt | common/permission/ui/ |
+| QuickCleanProPermissionUi.kt | common/ui/permission/ |
+| AppLockPermissionPopups.kt | common/ui/permission/ |
+| NotificationEnableGuideDialog.kt | common/ui/permission/ |
+| AppPermissionHost.kt | app/runtime/permission/ |
+| PermissionCoordinator.kt | app/runtime/permission/ |
+| PermissionPromptHost.kt | app/runtime/permission/ |
+| PermissionCoordinatorModels.kt | app/runtime/permission/ |
+| PermissionAnalytics.kt | app/runtime/permission/ |
+| NotificationPermissionPolicy.kt | app/runtime/permission/ |
+| NotificationPermissionViewModel.kt | app/runtime/permission/ |
+| NotificationPermissionHost.kt | app/runtime/permission/ |

@@ -11,6 +11,7 @@ import com.quickcleanpro.phonecleaner.common.ads.AdvertiseSdkAdapter
 import com.quickcleanpro.phonecleaner.app.di.dataModule
 import com.quickcleanpro.phonecleaner.app.di.presentationModule
 import com.quickcleanpro.phonecleaner.app.runtime.SdkInitializationCoordinator
+import com.quickcleanpro.phonecleaner.app.runtime.notification.NotificationDefaultsInitializer
 import com.quickcleanpro.phonecleaner.common.analytics.AnalyticsTracker
 import com.quickcleanpro.phonecleaner.common.analytics.AnalyticsPreferences
 import kotlinx.coroutines.CoroutineScope
@@ -58,10 +59,22 @@ class MyApp : Application() {
                     }
                 },
                 notificationDefaultsInitializer = {
-                    AdvertiseSdkAdapter.awaitRemoteConfigInitialization()
-                    withContext(Dispatchers.Main.immediate) {
-                        loadSdkNotificationDefaultsIfNeeded()
-                    }
+                    val result =
+                        NotificationDefaultsInitializer(
+                            awaitRemoteConfig = { AdvertiseSdkAdapter.awaitRemoteConfigInitialization() },
+                            hasConfig = AdvertiseSdkAdapter::hasNotificationConfig,
+                            hasContent = AdvertiseSdkAdapter::hasNotificationContent,
+                            loadLocalConfig = { readRawResource(R.raw.notification_config) },
+                            loadLocalContent = { readRawResource(R.raw.notification_content) },
+                            updateConfig = AdvertiseSdkAdapter::updateNotificationConfig,
+                            updateContent = AdvertiseSdkAdapter::updateNotificationContent,
+                        ).initialize()
+                    Log.d(
+                        TAG,
+                        "Advertise notification defaults ready: " +
+                            "config=${result.configSource}, content=${result.contentSource}, " +
+                            "remoteCompleted=${result.remoteConfigCompleted}",
+                    )
                 },
                 logger = { message, throwable ->
                     if (throwable == null) {
@@ -73,15 +86,10 @@ class MyApp : Application() {
             ).also { it.start() }
     }
 
-    private fun loadSdkNotificationDefaultsIfNeeded() {
-        if (AdvertiseSdkAdapter.hasNotificationContent()) return
-
-        resources.openRawResource(R.raw.notification_content)
+    private fun readRawResource(resourceId: Int): String =
+        resources.openRawResource(resourceId)
             .bufferedReader()
             .use { it.readText() }
-            .takeIf { it.isNotBlank() }
-            ?.let(AdvertiseSdkAdapter::updateNotificationContent)
-    }
 
     private object AppAnalyticsLifecycleObserver : DefaultLifecycleObserver {
         override fun onStart(owner: LifecycleOwner) {

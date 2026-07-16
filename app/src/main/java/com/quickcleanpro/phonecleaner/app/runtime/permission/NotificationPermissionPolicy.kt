@@ -5,84 +5,133 @@ import java.util.Calendar
 enum class NotificationPermissionRequestSource {
     Splash,
     HomeSystem,
-    HomeCustom,
 }
 
-data class NotificationPermissionSnapshot(
+data class NotificationPermissionFacts(
     val hasPermission: Boolean,
     val hasRequestedBefore: Boolean,
     val shouldShowRationale: Boolean,
     val lastCustomPromptAt: Long,
 )
 
-data class NotificationPermissionUiState(
-    val isSplashVisible: Boolean = true,
-    val isHomeVisible: Boolean = false,
-    val hasPermission: Boolean = false,
-    val hasRequestedBefore: Boolean = false,
-    val shouldShowRationale: Boolean = false,
-    val lastCustomPromptAt: Long = 0L,
-    val customDialogVisible: Boolean = false,
-    val requestSource: NotificationPermissionRequestSource? = null,
-    val settingsLaunchPending: Boolean = false,
-    val suppressHomePromptUntilMillis: Long = 0L,
-    val splashPaused: Boolean = false,
-    val permissionUiActive: Boolean = false,
-    val homeCustomPromptDeferred: Boolean = false,
-) {
-    val permissionFlowActive: Boolean
-        get() = splashPaused || permissionUiActive
+enum class NotificationPermissionSurface {
+    Splash,
+    Home,
+    Other,
 }
 
-sealed interface NotificationPermissionAction {
-    data class VisibilityChanged(
-        val isSplashVisible: Boolean,
-        val isHomeVisible: Boolean,
-        val shouldShowRationale: Boolean,
-    ) : NotificationPermissionAction
+sealed interface NotificationPermissionPhase {
+    data object Idle : NotificationPermissionPhase
+    data object AwaitingInitialRequest : NotificationPermissionPhase
 
-    data class Refresh(
-        val returningFromSettings: Boolean,
-        val shouldShowRationale: Boolean,
-    ) : NotificationPermissionAction
+    data class RequestingSystem(
+        val source: NotificationPermissionRequestSource,
+    ) : NotificationPermissionPhase
 
-    data class PermissionResult(
-        val granted: Boolean,
-        val shouldShowRationale: Boolean,
+    data object ShowingCustomPrompt : NotificationPermissionPhase
+    data object LaunchingSettings : NotificationPermissionPhase
+    data object WaitingForSettingsReturn : NotificationPermissionPhase
+}
+
+data class NotificationPermissionUiState(
+    val facts: NotificationPermissionFacts,
+    val surface: NotificationPermissionSurface = NotificationPermissionSurface.Splash,
+    val phase: NotificationPermissionPhase = NotificationPermissionPhase.Idle,
+    val customPromptDeferredForSession: Boolean = false,
+) {
+    val hasPermission: Boolean
+        get() = facts.hasPermission
+
+    val splashPaused: Boolean
+        get() =
+            surface == NotificationPermissionSurface.Splash &&
+                (phase == NotificationPermissionPhase.AwaitingInitialRequest ||
+                    phase ==
+                    NotificationPermissionPhase.RequestingSystem(
+                        NotificationPermissionRequestSource.Splash,
+                    ))
+
+    val permissionUiActive: Boolean
+        get() =
+            when (phase) {
+                NotificationPermissionPhase.Idle,
+                NotificationPermissionPhase.AwaitingInitialRequest,
+                -> false
+                is NotificationPermissionPhase.RequestingSystem ->
+                    when (phase.source) {
+                        NotificationPermissionRequestSource.Splash ->
+                            surface == NotificationPermissionSurface.Splash
+                        NotificationPermissionRequestSource.HomeSystem ->
+                            surface == NotificationPermissionSurface.Home
+                    }
+                NotificationPermissionPhase.ShowingCustomPrompt ->
+                    surface == NotificationPermissionSurface.Home
+                NotificationPermissionPhase.LaunchingSettings,
+                NotificationPermissionPhase.WaitingForSettingsReturn,
+                -> surface == NotificationPermissionSurface.Home
+            }
+
+    val permissionFlowActive: Boolean
+        get() = splashPaused || permissionUiActive
+
+    val customDialogVisible: Boolean
+        get() = phase == NotificationPermissionPhase.ShowingCustomPrompt
+}
+
+internal sealed interface NotificationPermissionAction {
+    data class SurfaceChanged(
+        val surface: NotificationPermissionSurface,
+        val facts: NotificationPermissionFacts,
     ) : NotificationPermissionAction
 
     data object HomePromptDelayElapsed : NotificationPermissionAction
-    data object HomePromptCooldownElapsed : NotificationPermissionAction
+
+    data class AppResumed(
+        val facts: NotificationPermissionFacts,
+    ) : NotificationPermissionAction
+
+    data class SystemPermissionResult(
+        val facts: NotificationPermissionFacts,
+    ) : NotificationPermissionAction
+
     data object CustomPromptConfirmed : NotificationPermissionAction
     data object CustomPromptDismissed : NotificationPermissionAction
     data class SettingsLaunchResult(val launched: Boolean) : NotificationPermissionAction
 }
 
-sealed interface NotificationPermissionEffect {
+internal sealed interface NotificationPermissionCommand {
+    sealed interface Host : NotificationPermissionCommand
+
     data class RequestSystemPermission(
         val source: NotificationPermissionRequestSource,
-    ) : NotificationPermissionEffect
+    ) : Host
 
-    data object OpenAppSettings : NotificationPermissionEffect
-    data object NotifyPermissionGranted : NotificationPermissionEffect
-}
-
-internal sealed interface NotificationPermissionSideEffect {
-    data object SaveRequestedBefore : NotificationPermissionSideEffect
-
-    data class SaveLastCustomPromptAt(val timestampMillis: Long) : NotificationPermissionSideEffect
-
-    data class TrackPopup(val accepted: Boolean) : NotificationPermissionSideEffect
-
-    data class TrackPermissionResult(val granted: Boolean) : NotificationPermissionSideEffect
-
-    data class Host(val effect: NotificationPermissionEffect) : NotificationPermissionSideEffect
+    data object OpenAppSettings : Host
+    data object NotifyPermissionGranted : Host
+    data object SaveRequestedBefore : NotificationPermissionCommand
+    data class SaveLastCustomPromptAt(val timestampMillis: Long) : NotificationPermissionCommand
+    data class TrackPopup(val accepted: Boolean) : NotificationPermissionCommand
+    data class TrackPermissionResult(val granted: Boolean) : NotificationPermissionCommand
 }
 
 internal data class NotificationPermissionTransition(
     val state: NotificationPermissionUiState,
-    val effects: List<NotificationPermissionSideEffect> = emptyList(),
+    val commands: List<NotificationPermissionCommand> = emptyList(),
 )
+
+internal fun initialNotificationPermissionState(
+    runtimePermissionRequired: Boolean,
+    facts: NotificationPermissionFacts,
+): NotificationPermissionUiState =
+    NotificationPermissionUiState(
+        facts = facts,
+        phase =
+            if (runtimePermissionRequired && !facts.hasPermission && !facts.hasRequestedBefore) {
+                NotificationPermissionPhase.AwaitingInitialRequest
+            } else {
+                NotificationPermissionPhase.Idle
+            },
+    )
 
 internal fun reduceNotificationPermissionState(
     state: NotificationPermissionUiState,
@@ -90,90 +139,50 @@ internal fun reduceNotificationPermissionState(
     nowMillis: Long,
 ): NotificationPermissionTransition =
     when (action) {
-        is NotificationPermissionAction.VisibilityChanged ->
-            onVisibilityChanged(state, action)
-        is NotificationPermissionAction.Refresh ->
-            refreshPermission(state, action.returningFromSettings, nowMillis)
-        is NotificationPermissionAction.PermissionResult ->
-            onPermissionResult(state, action.granted)
-        NotificationPermissionAction.HomePromptDelayElapsed,
-        NotificationPermissionAction.HomePromptCooldownElapsed,
-        -> refreshPermission(state, returningFromSettings = false, nowMillis = nowMillis)
-        NotificationPermissionAction.CustomPromptConfirmed ->
-            NotificationPermissionTransition(
-                state =
-                    state.copy(
-                        customDialogVisible = false,
-                        requestSource = NotificationPermissionRequestSource.HomeCustom,
-                        permissionUiActive = true,
-                    ),
-                effects =
-                    listOf(
-                        NotificationPermissionSideEffect.TrackPopup(accepted = true),
-                        NotificationPermissionSideEffect.Host(NotificationPermissionEffect.OpenAppSettings),
-                    ),
-            )
-        NotificationPermissionAction.CustomPromptDismissed ->
-            NotificationPermissionTransition(
-                state = state.copy(customDialogVisible = false, permissionUiActive = false),
-                effects = listOf(NotificationPermissionSideEffect.TrackPopup(accepted = false)),
-            )
-        is NotificationPermissionAction.SettingsLaunchResult ->
-            NotificationPermissionTransition(
-                state =
-                    if (action.launched) {
-                        state.copy(settingsLaunchPending = true)
-                    } else {
-                        state.copy(
-                            requestSource = null,
-                            settingsLaunchPending = false,
-                            permissionUiActive = false,
-                        )
-                    },
-            )
+        is NotificationPermissionAction.SurfaceChanged -> onSurfaceChanged(state, action)
+        NotificationPermissionAction.HomePromptDelayElapsed -> evaluateHomePrompt(state, nowMillis)
+        is NotificationPermissionAction.AppResumed -> onAppResumed(state, action, nowMillis)
+        is NotificationPermissionAction.SystemPermissionResult -> onSystemPermissionResult(state, action)
+        NotificationPermissionAction.CustomPromptConfirmed -> onCustomPromptConfirmed(state)
+        NotificationPermissionAction.CustomPromptDismissed -> onCustomPromptDismissed(state)
+        is NotificationPermissionAction.SettingsLaunchResult -> onSettingsLaunchResult(state, action)
     }
 
-private fun onVisibilityChanged(
+private fun onSurfaceChanged(
     state: NotificationPermissionUiState,
-    action: NotificationPermissionAction.VisibilityChanged,
+    action: NotificationPermissionAction.SurfaceChanged,
 ): NotificationPermissionTransition {
-    var updated =
-        state.copy(
-            isSplashVisible = action.isSplashVisible,
-            isHomeVisible = action.isHomeVisible,
-            shouldShowRationale = action.shouldShowRationale,
-        )
-    if (!updated.isHomeVisible) {
-        updated =
-            updated.copy(
-                customDialogVisible = false,
-                suppressHomePromptUntilMillis = 0L,
-                permissionUiActive = false,
-            )
+    var updated = state.copy(surface = action.surface, facts = action.facts)
+    if (updated.facts.hasPermission) {
+        return NotificationPermissionTransition(updated.copy(phase = NotificationPermissionPhase.Idle))
     }
-    if (!updated.isSplashVisible || updated.hasPermission) {
-        updated = updated.copy(splashPaused = false)
+    if (action.surface != NotificationPermissionSurface.Home &&
+        updated.phase == NotificationPermissionPhase.ShowingCustomPrompt
+    ) {
+        updated = updated.copy(phase = NotificationPermissionPhase.Idle)
     }
-    if (updated.isSplashVisible &&
-        !updated.hasPermission &&
-        !updated.hasRequestedBefore &&
-        updated.requestSource == null
+    if (action.surface != NotificationPermissionSurface.Splash &&
+        updated.phase == NotificationPermissionPhase.AwaitingInitialRequest
+    ) {
+        updated = updated.copy(phase = NotificationPermissionPhase.Idle)
+    }
+    if (action.surface == NotificationPermissionSurface.Splash &&
+        updated.phase == NotificationPermissionPhase.AwaitingInitialRequest
     ) {
         return NotificationPermissionTransition(
             state =
                 updated.copy(
-                    hasRequestedBefore = true,
-                    requestSource = NotificationPermissionRequestSource.Splash,
-                    splashPaused = true,
-                    permissionUiActive = true,
-                ),
-            effects =
-                listOf(
-                    NotificationPermissionSideEffect.SaveRequestedBefore,
-                    NotificationPermissionSideEffect.Host(
-                        NotificationPermissionEffect.RequestSystemPermission(
+                    facts = updated.facts.copy(hasRequestedBefore = true),
+                    phase =
+                        NotificationPermissionPhase.RequestingSystem(
                             NotificationPermissionRequestSource.Splash,
                         ),
+                ),
+            commands =
+                listOf(
+                    NotificationPermissionCommand.SaveRequestedBefore,
+                    NotificationPermissionCommand.RequestSystemPermission(
+                        NotificationPermissionRequestSource.Splash,
                     ),
                 ),
         )
@@ -181,137 +190,152 @@ private fun onVisibilityChanged(
     return NotificationPermissionTransition(updated)
 }
 
-private fun refreshPermission(
+private fun onAppResumed(
     state: NotificationPermissionUiState,
-    returningFromSettings: Boolean,
+    action: NotificationPermissionAction.AppResumed,
     nowMillis: Long,
 ): NotificationPermissionTransition {
-    val resultEffects =
-        if (returningFromSettings) {
-            listOf(NotificationPermissionSideEffect.TrackPermissionResult(state.hasPermission))
-        } else {
-            emptyList()
-        }
-    if (state.hasPermission) {
+    val updated = state.copy(facts = action.facts)
+    if (state.phase == NotificationPermissionPhase.WaitingForSettingsReturn) {
+        return NotificationPermissionTransition(
+            state = updated.copy(phase = NotificationPermissionPhase.Idle),
+            commands =
+                buildList {
+                    add(NotificationPermissionCommand.TrackPermissionResult(updated.hasPermission))
+                    if (updated.hasPermission) {
+                        add(NotificationPermissionCommand.NotifyPermissionGranted)
+                    }
+                },
+        )
+    }
+    if (updated.hasPermission) {
+        return NotificationPermissionTransition(
+            state = updated.copy(phase = NotificationPermissionPhase.Idle),
+            commands = listOf(NotificationPermissionCommand.NotifyPermissionGranted),
+        )
+    }
+    return evaluateHomePrompt(updated, nowMillis)
+}
+
+private fun evaluateHomePrompt(
+    state: NotificationPermissionUiState,
+    nowMillis: Long,
+): NotificationPermissionTransition {
+    if (state.surface != NotificationPermissionSurface.Home ||
+        state.phase != NotificationPermissionPhase.Idle ||
+        state.hasPermission ||
+        !state.facts.hasRequestedBefore
+    ) {
+        return NotificationPermissionTransition(state)
+    }
+    if (state.facts.shouldShowRationale) {
         return NotificationPermissionTransition(
             state =
                 state.copy(
-                    customDialogVisible = false,
-                    requestSource = null,
-                    settingsLaunchPending = false,
-                    splashPaused = false,
-                    permissionUiActive = false,
-                ),
-            effects =
-                resultEffects +
-                    NotificationPermissionSideEffect.Host(NotificationPermissionEffect.NotifyPermissionGranted),
-        )
-    }
-
-    val base =
-        state.copy(
-            requestSource = if (returningFromSettings) null else state.requestSource,
-            settingsLaunchPending = if (returningFromSettings) false else state.settingsLaunchPending,
-            permissionUiActive = if (returningFromSettings) false else state.permissionUiActive,
-        )
-    if (!base.isHomeVisible || returningFromSettings || base.requestSource != null) {
-        return NotificationPermissionTransition(
-            state = base.copy(customDialogVisible = false, permissionUiActive = false),
-            effects = resultEffects,
-        )
-    }
-    if (nowMillis < base.suppressHomePromptUntilMillis || !base.hasRequestedBefore) {
-        return NotificationPermissionTransition(
-            state = base.copy(customDialogVisible = false, permissionUiActive = false),
-            effects = resultEffects,
-        )
-    }
-    if (base.shouldShowRationale) {
-        return NotificationPermissionTransition(
-            state =
-                base.copy(
-                    customDialogVisible = false,
-                    hasRequestedBefore = true,
-                    requestSource = NotificationPermissionRequestSource.HomeSystem,
-                    suppressHomePromptUntilMillis = nowMillis + HOME_SYSTEM_REQUEST_COOLDOWN_MILLIS,
-                    permissionUiActive = true,
-                ),
-            effects =
-                resultEffects +
-                    listOf(
-                        NotificationPermissionSideEffect.SaveRequestedBefore,
-                        NotificationPermissionSideEffect.Host(
-                            NotificationPermissionEffect.RequestSystemPermission(
-                                NotificationPermissionRequestSource.HomeSystem,
-                            ),
+                    facts = state.facts.copy(hasRequestedBefore = true),
+                    phase =
+                        NotificationPermissionPhase.RequestingSystem(
+                            NotificationPermissionRequestSource.HomeSystem,
                         ),
+                ),
+            commands =
+                listOf(
+                    NotificationPermissionCommand.SaveRequestedBefore,
+                    NotificationPermissionCommand.RequestSystemPermission(
+                        NotificationPermissionRequestSource.HomeSystem,
                     ),
+                ),
         )
     }
-    if (!base.homeCustomPromptDeferred &&
-        canShowNotificationPermissionCustomPrompt(base.lastCustomPromptAt, nowMillis)
+    if (!state.customPromptDeferredForSession &&
+        canShowNotificationPermissionCustomPrompt(state.facts.lastCustomPromptAt, nowMillis)
     ) {
         return NotificationPermissionTransition(
             state =
-                base.copy(
-                    lastCustomPromptAt = nowMillis,
-                    customDialogVisible = true,
-                    permissionUiActive = true,
+                state.copy(
+                    facts = state.facts.copy(lastCustomPromptAt = nowMillis),
+                    phase = NotificationPermissionPhase.ShowingCustomPrompt,
                 ),
-            effects =
-                resultEffects + NotificationPermissionSideEffect.SaveLastCustomPromptAt(nowMillis),
+            commands = listOf(NotificationPermissionCommand.SaveLastCustomPromptAt(nowMillis)),
         )
     }
-    return NotificationPermissionTransition(
-        state = base.copy(customDialogVisible = false, permissionUiActive = false),
-        effects = resultEffects,
-    )
+    return NotificationPermissionTransition(state)
 }
 
-private fun onPermissionResult(
+private fun onSystemPermissionResult(
     state: NotificationPermissionUiState,
-    granted: Boolean,
+    action: NotificationPermissionAction.SystemPermissionResult,
 ): NotificationPermissionTransition {
-    val source = state.requestSource
-    val commonEffects =
-        listOf(
-            NotificationPermissionSideEffect.TrackPopup(accepted = granted),
-            NotificationPermissionSideEffect.TrackPermissionResult(granted),
-        )
-    if (granted) {
-        return NotificationPermissionTransition(
-            state =
-                state.copy(
-                    hasPermission = true,
-                    customDialogVisible = false,
-                    requestSource = null,
-                    settingsLaunchPending = false,
-                    splashPaused = false,
-                    permissionUiActive = false,
-                ),
-            effects =
-                commonEffects +
-                    NotificationPermissionSideEffect.Host(NotificationPermissionEffect.NotifyPermissionGranted),
-        )
-    }
+    val source = (state.phase as? NotificationPermissionPhase.RequestingSystem)?.source
+    val facts = action.facts.copy(hasRequestedBefore = true)
+    val commands =
+        buildList {
+            add(NotificationPermissionCommand.TrackPopup(accepted = facts.hasPermission))
+            add(NotificationPermissionCommand.TrackPermissionResult(granted = facts.hasPermission))
+            if (facts.hasPermission) {
+                add(NotificationPermissionCommand.NotifyPermissionGranted)
+            }
+        }
     return NotificationPermissionTransition(
         state =
             state.copy(
-                hasPermission = false,
-                hasRequestedBefore = true,
-                customDialogVisible = false,
-                requestSource = null,
-                settingsLaunchPending = false,
-                suppressHomePromptUntilMillis = 0L,
-                splashPaused = if (source == NotificationPermissionRequestSource.Splash) false else state.splashPaused,
-                permissionUiActive = false,
-                homeCustomPromptDeferred =
-                    state.homeCustomPromptDeferred ||
+                facts = facts,
+                phase = NotificationPermissionPhase.Idle,
+                customPromptDeferredForSession =
+                    state.customPromptDeferredForSession ||
                         source == NotificationPermissionRequestSource.HomeSystem,
             ),
-        effects = commonEffects,
+        commands = commands,
     )
 }
+
+private fun onCustomPromptConfirmed(
+    state: NotificationPermissionUiState,
+): NotificationPermissionTransition =
+    if (state.phase == NotificationPermissionPhase.ShowingCustomPrompt) {
+        NotificationPermissionTransition(
+            state = state.copy(phase = NotificationPermissionPhase.LaunchingSettings),
+            commands =
+                listOf(
+                    NotificationPermissionCommand.TrackPopup(accepted = true),
+                    NotificationPermissionCommand.OpenAppSettings,
+                ),
+        )
+    } else {
+        NotificationPermissionTransition(state)
+    }
+
+private fun onCustomPromptDismissed(
+    state: NotificationPermissionUiState,
+): NotificationPermissionTransition =
+    if (state.phase == NotificationPermissionPhase.ShowingCustomPrompt) {
+        NotificationPermissionTransition(
+            state = state.copy(phase = NotificationPermissionPhase.Idle),
+            commands = listOf(NotificationPermissionCommand.TrackPopup(accepted = false)),
+        )
+    } else {
+        NotificationPermissionTransition(state)
+    }
+
+private fun onSettingsLaunchResult(
+    state: NotificationPermissionUiState,
+    action: NotificationPermissionAction.SettingsLaunchResult,
+): NotificationPermissionTransition =
+    if (state.phase == NotificationPermissionPhase.LaunchingSettings) {
+        NotificationPermissionTransition(
+            state =
+                state.copy(
+                    phase =
+                        if (action.launched) {
+                            NotificationPermissionPhase.WaitingForSettingsReturn
+                        } else {
+                            NotificationPermissionPhase.Idle
+                        },
+                ),
+        )
+    } else {
+        NotificationPermissionTransition(state)
+    }
 
 internal fun canShowNotificationPermissionCustomPrompt(
     lastPromptAt: Long,
@@ -326,4 +350,3 @@ internal fun canShowNotificationPermissionCustomPrompt(
 }
 
 internal const val HOME_NOTIFICATION_PERMISSION_PROMPT_DELAY_MILLIS = 350L
-internal const val HOME_SYSTEM_REQUEST_COOLDOWN_MILLIS = 5_000L

@@ -82,17 +82,23 @@ object AdvertiseSdkAdapter {
         AdvertiseNotificationManager.updateNotificationContent(content)
     }
 
-    suspend fun awaitRemoteConfigInitialization(timeoutMillis: Long = REMOTE_CONFIG_WAIT_MS) {
+    fun updateNotificationConfig(config: String) {
+        AdvertiseNotificationManager.updateNotificationConfig(config)
+    }
+
+    suspend fun awaitRemoteConfigInitialization(timeoutMillis: Long = REMOTE_CONFIG_WAIT_MS): Boolean =
         withTimeoutOrNull(timeoutMillis) {
             suspendCancellableCoroutine { continuation ->
                 AdvertiseSdk.getRemoteConfigInitStatus { _, _, _ ->
                     if (continuation.isActive) {
-                        continuation.resume(Unit)
+                        continuation.resume(true)
                     }
                 }
             }
-        }
-    }
+        } ?: false
+
+    fun hasNotificationConfig(): Boolean =
+        AdvertiseNotificationManager.notificationConfig != null
 
     fun hasNotificationContent(): Boolean =
         !AdvertiseNotificationManager.notificationContents.isNullOrEmpty()
