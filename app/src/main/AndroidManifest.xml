@@ -58,6 +58,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="com.quickcleanpro.phonecleaner.app.OpenAdHostActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@style/Theme.QuickCleanPRO.OpenAdHost" />
         <service
             android:name="com.quickcleanpro.phonecleaner.feature.notificationcleaner.QuickCleanPRONotificationListener"
             android:exported="true"

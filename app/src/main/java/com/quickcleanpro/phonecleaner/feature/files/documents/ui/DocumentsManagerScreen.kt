@@ -13,7 +13,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -21,14 +20,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import com.quickcleanpro.phonecleaner.R
 import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
-import com.quickcleanpro.phonecleaner.common.ui.components.CleanXBottomActionBar
+import com.quickcleanpro.phonecleaner.feature.files.shared.ui.FileManagerDeleteBottomBar
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.FileManagerScaffold
 import com.quickcleanpro.phonecleaner.feature.files.shared.FileOperationPhase
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.FileManagerListView
@@ -40,7 +37,6 @@ import com.quickcleanpro.phonecleaner.feature.files.shared.rememberFileManagerPe
 import com.quickcleanpro.phonecleaner.feature.files.shared.FileManagerFlowDialogs
 import com.quickcleanpro.phonecleaner.feature.files.shared.FileManagerFlowEffects
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.FileOperationPhaseContent
-import com.quickcleanpro.phonecleaner.common.format.FileSizeFormatter
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.FileManagerAction
 
 @Composable
@@ -61,16 +57,10 @@ internal fun DocumentsManagerScreen(
         onBack = { onAction(FileManagerAction.Back) },
         bottomBar = {
             if (permissionGranted && state.phase == FileOperationPhase.Browsing && !isDetailMode) {
-                CleanXBottomActionBar(
+                FileManagerDeleteBottomBar(
                     enabled = state.selectedIds.isNotEmpty(),
-                    text = if (state.selectedSizeBytes > 0L) {
-                        stringResource(R.string.file_delete_size, FileSizeFormatter.format(state.selectedSizeBytes).replace(" ", ""))
-                    } else stringResource(R.string.file_delete),
+                    selectedSizeBytes = state.selectedSizeBytes,
                     onClick = { onAction(FileManagerAction.RequestDelete) },
-                    backgroundColor = Color.Transparent,
-                    buttonModifier = Modifier.height(52.dp),
-                    buttonCornerRadius = 10.dp,
-                    buttonFontSize = 20.sp,
                 )
             }
         },

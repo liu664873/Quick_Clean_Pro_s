@@ -10,14 +10,10 @@ import com.quickcleanpro.phonecleaner.feature.toolbox.networkscan.NetworkScanDev
 @Composable
 internal fun NetworkScanDevicesContentView(
     uiState: NetworkScanDevicesUiState,
-    onRetry: () -> Unit,
 ) {
     when {
         uiState.isLoading -> NetworkScanDevicesLoadingView(uiState = uiState)
-        uiState.errorMessage != null -> NetworkScanDevicesErrorView(
-            uiState = uiState,
-            onRetry = onRetry,
-        )
+        uiState.errorMessage != null -> NetworkScanDevicesErrorView(uiState = uiState)
         else -> NetworkScanDevicesResultView(uiState = uiState)
     }
 }

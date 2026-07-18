@@ -66,7 +66,13 @@ internal class VideosManagerViewModel(
     }
 
     fun selectTab(index: Int) {
-        _uiState.update { it.copy(selectedTabIndex = index.coerceAtLeast(0), detailStartIndex = null) }
+        _uiState.update {
+            it.copy(
+                selectedTabIndex = index.coerceAtLeast(0),
+                selectedIds = emptySet(),
+                detailStartIndex = null,
+            )
+        }
     }
 
     fun toggleSelection(id: Int) {

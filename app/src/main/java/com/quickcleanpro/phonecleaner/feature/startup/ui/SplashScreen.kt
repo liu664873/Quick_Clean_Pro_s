@@ -1,7 +1,9 @@
 package com.quickcleanpro.phonecleaner.feature.startup.ui
 
 import com.quickcleanpro.phonecleaner.feature.startup.SplashAction
+import com.quickcleanpro.phonecleaner.feature.startup.SplashProgressStage
 import com.quickcleanpro.phonecleaner.feature.startup.SplashUiState
+import com.quickcleanpro.phonecleaner.feature.startup.targetProgress
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
@@ -17,14 +19,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +41,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -48,7 +57,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.quickcleanpro.phonecleaner.R
 import com.quickcleanpro.phonecleaner.common.ui.components.CircularAppLogo
-import com.quickcleanpro.phonecleaner.common.ui.components.RoundedProgressBar
 import com.quickcleanpro.phonecleaner.common.ui.components.stableNavigationBarsPadding
 import com.quickcleanpro.phonecleaner.common.ui.theme.LocalAppThemeTokens
 import com.quickcleanpro.phonecleaner.common.ui.theme.QuickCleanProAppTheme
@@ -72,7 +80,8 @@ fun SplashScreen(
     val interactionSource = remember { MutableInteractionSource() }
     val latestOnAction by rememberUpdatedState(onAction)
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(state.paused) {
+        if (state.paused) return@LaunchedEffect
         if (scaleAnim.value < 1f) {
             scaleAnim.animateTo(
                 targetValue = 1f,
@@ -96,51 +105,59 @@ fun SplashScreen(
         }
     }
 
-    LaunchedEffect(state.paused, state.finishRequested, visualFinished) {
-        if (state.paused || visualFinished) return@LaunchedEffect
+    LaunchedEffect(state.showOpenAdOverlay, visualFinished) {
+        if (!state.showOpenAdOverlay || visualFinished) return@LaunchedEffect
+        withFrameNanos { }
+        latestOnAction(SplashAction.OpenAdOverlayReady)
+    }
 
-        if (progressAnim.value < STARTUP_VISUAL_PROGRESS) {
-            progressAnim.animateTo(
-                targetValue = STARTUP_VISUAL_PROGRESS,
-                animationSpec =
-                    tween(
-                        durationMillis =
-                            remainingDurationMillis(
-                                current = progressAnim.value,
-                                start = 0f,
-                                target = STARTUP_VISUAL_PROGRESS,
-                                durationMillis = STARTUP_VISUAL_DURATION_MS,
-                            ),
-                        easing = LinearEasing,
-                    ),
-            )
-        }
-
-        if (!state.finishRequested) {
-            if (progressAnim.value < STARTUP_WAITING_PROGRESS) {
+    LaunchedEffect(state.paused, state.finishRequested, state.progressStage, visualFinished) {
+        if (visualFinished) return@LaunchedEffect
+        val targetProgress = state.progressStage.targetProgress
+        if (state.paused) {
+            if (state.progressStage == SplashProgressStage.ShowingAd &&
+                progressAnim.value < targetProgress
+            ) {
                 progressAnim.animateTo(
-                    targetValue = STARTUP_WAITING_PROGRESS,
+                    targetValue = targetProgress,
                     animationSpec =
                         tween(
                             durationMillis =
                                 remainingDurationMillis(
                                     current = progressAnim.value,
-                                    start = STARTUP_VISUAL_PROGRESS,
-                                    target = STARTUP_WAITING_PROGRESS,
-                                    durationMillis = STARTUP_WAITING_DURATION_MS,
+                                    start = state.progressStage.startProgress,
+                                    target = targetProgress,
+                                    durationMillis = state.progressStage.durationMillis,
                                 ),
-                            easing = LinearEasing,
+                            easing = FastOutSlowInEasing,
                         ),
                 )
             }
             return@LaunchedEffect
         }
-
-        if (progressAnim.value < 1f) {
+        if (progressAnim.value < targetProgress) {
             progressAnim.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = STARTUP_FINISH_DURATION_MS, easing = LinearEasing),
+                targetValue = targetProgress,
+                animationSpec =
+                    tween(
+                        durationMillis =
+                            remainingDurationMillis(
+                                current = progressAnim.value,
+                                start = state.progressStage.startProgress,
+                                target = targetProgress,
+                                durationMillis = state.progressStage.durationMillis,
+                            ),
+                        easing =
+                            if (state.progressStage == SplashProgressStage.RequestingAd) {
+                                LinearEasing
+                            } else {
+                                FastOutSlowInEasing
+                            },
+                    ),
             )
+        }
+        if (state.progressStage != SplashProgressStage.Finishing || !state.finishRequested) {
+            return@LaunchedEffect
         }
         delay(STARTUP_FINISH_HOLD_MS)
         visualFinished = true
@@ -213,7 +230,11 @@ fun SplashScreen(
                     .padding(bottom = 40.dp),
             verticalArrangement = Arrangement.spacedBy(40.dp),
         ) {
-            RoundedProgressBar(progress = progressAnim.value)
+            SplashStageProgressBar(
+                progress = progressAnim.value,
+                activeStage = state.progressStage,
+                paused = state.paused,
+            )
 
             FlowRow(
                 modifier =
@@ -264,6 +285,54 @@ fun SplashScreen(
                 )
             }
         }
+
+        if (state.showOpenAdOverlay) {
+            OpenAdWaitingOverlay()
+        }
+    }
+}
+
+@Composable
+private fun OpenAdWaitingOverlay() {
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.35f))
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                ) {},
+        contentAlignment = Alignment.Center,
+    ) {
+        Surface(
+            modifier =
+                Modifier
+                    .padding(horizontal = 24.dp)
+                    .widthIn(min = 220.dp, max = 320.dp),
+            shape = RoundedCornerShape(6.dp),
+            color = Color.White,
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(22.dp),
+                    color = Color(0xFF267A5E),
+                    strokeWidth = 2.dp,
+                )
+                Text(
+                    text = stringResource(R.string.open_ad_loading),
+                    modifier = Modifier.weight(1f),
+                    color = Color(0xFF202124),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
     }
 }
 
@@ -284,12 +353,27 @@ enum class SplashLegalDocument {
     Privacy,
 }
 
-private const val STARTUP_VISUAL_PROGRESS = 0.72f
-private const val STARTUP_WAITING_PROGRESS = 0.94f
-private const val STARTUP_VISUAL_DURATION_MS = 2_800
-private const val STARTUP_WAITING_DURATION_MS = 6_500
-private const val STARTUP_FINISH_DURATION_MS = 650
 private const val STARTUP_FINISH_HOLD_MS = 300L
+
+private val SplashProgressStage.startProgress: Float
+    get() =
+        when (this) {
+            SplashProgressStage.Preparing -> 0f
+            SplashProgressStage.RequestingAd -> 0.25f
+            SplashProgressStage.ShowingAd -> 0.50f
+            SplashProgressStage.Finishing -> 0.75f
+            SplashProgressStage.Completed -> 1f
+        }
+
+private val SplashProgressStage.durationMillis: Int
+    get() =
+        when (this) {
+            SplashProgressStage.Preparing -> 1_200
+            SplashProgressStage.RequestingAd -> 4_800
+            SplashProgressStage.ShowingAd -> 900
+            SplashProgressStage.Finishing -> 800
+            SplashProgressStage.Completed -> 1
+        }
 
 private fun remainingDurationMillis(
     current: Float,

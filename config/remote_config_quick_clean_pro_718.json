@@ -106,17 +106,17 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
         },
         {
           "areakey": "mainFileManageFinishAdv",
-          "rate": 0,
+          "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -126,7 +126,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -136,7 +136,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -146,7 +146,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -156,7 +156,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -166,7 +166,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -176,7 +176,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -186,7 +186,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -196,7 +196,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -206,7 +206,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -216,7 +216,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -226,7 +226,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -236,7 +236,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -246,7 +246,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -256,7 +256,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -266,7 +266,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -276,7 +276,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -286,7 +286,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -296,7 +296,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -306,7 +306,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -316,7 +316,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -326,7 +326,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -336,7 +336,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -346,7 +346,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -356,7 +356,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -366,7 +366,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -376,7 +376,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -386,7 +386,7 @@
           "rate": 1,
           "frequency_caps": {
             "max_per_hour": 5,
-            "max_per_day": 5,
+            "max_per_day": 10,
             "interval_seconds": 0
           },
           "show_delay_seconds": 0
@@ -1093,7 +1093,7 @@
     "notification_config": {
       "24HMax": 70,
       "1HMax": 70,
-      "each_trigger_sent": 1,
+      "each_trigger_sent": 3,
       "first_open_delay_second": 0,
       "NMax": 5,
       "is_foreground_send": false,
@@ -1115,7 +1115,7 @@
           "id": "3",
           "name": "battery_change",
           "delay": 0,
-          "each_trigger_sent": 1
+          "each_trigger_sent": 3
         },
         {
           "id": "4",
@@ -1151,7 +1151,7 @@
           "id": "6",
           "name": "screen_on",
           "delay": 0,
-          "each_trigger_sent": 1
+          "each_trigger_sent": 3
         }
       ],
       "timer": [
@@ -1160,28 +1160,28 @@
           "name": "timer-a",
           "HH": 6,
           "MM": 0,
-          "each_trigger_sent": 1
+          "each_trigger_sent": 3
         },
         {
           "id": "timer-b",
           "name": "timer-b",
           "HH": 9,
           "MM": 0,
-          "each_trigger_sent": 1
+          "each_trigger_sent": 3
         },
         {
           "id": "timer-c",
           "name": "timer-c",
           "HH": 14,
           "MM": 0,
-          "each_trigger_sent": 1
+          "each_trigger_sent": 3
         },
         {
           "id": "timer-d",
           "name": "timer-d",
           "HH": 20,
           "MM": 0,
-          "each_trigger_sent": 1
+          "each_trigger_sent": 3
         }
       ]
     },

@@ -10,6 +10,8 @@ internal data class SplashMachineState(
     val visualReady: Boolean = false,
     val launchRequest: AppLaunchRequest? = null,
     val pauseReasons: Set<SplashPauseReason> = emptySet(),
+    val openAdLoaded: Boolean = false,
+    val openAdLaunchRequested: Boolean = false,
 )
 
 internal data class SplashTransition(
@@ -42,11 +44,24 @@ internal fun reduceSplashState(
             advancePreparing(state.copy(sdkBarrierFinished = true))
         SplashAction.VisualReady ->
             advancePreparing(state.copy(visualReady = true))
+        SplashAction.OpenAdOverlayReady ->
+            if (state.stage == SplashStage.WaitingForOpenAd && !state.openAdLaunchRequested) {
+                SplashTransition(
+                    state = state.copy(openAdLaunchRequested = true),
+                    effects = listOf(SplashEffect.RunColdStartAd),
+                )
+            } else {
+                SplashTransition(state)
+            }
         SplashAction.VisualFinished -> finishVisual(state, normalDestination)
         is SplashAction.PermissionPauseChanged ->
             SplashTransition(state.withPauseReason(SplashPauseReason.Permission, action.active))
         is SplashAction.OpenAdStateChanged ->
-            SplashTransition(state.withPauseReason(SplashPauseReason.OpenAd, action.active))
+            SplashTransition(
+                state
+                    .copy(openAdLoaded = state.openAdLoaded || action.active)
+                    .withPauseReason(SplashPauseReason.OpenAd, action.active),
+            )
         is SplashAction.ExternalLinkStateChanged ->
             SplashTransition(state.withPauseReason(SplashPauseReason.ExternalLink, action.active))
         SplashAction.OpenAdFinished -> {
@@ -90,7 +105,6 @@ private fun advancePreparing(state: SplashMachineState): SplashTransition {
         AppLaunchRequest.Normal ->
             SplashTransition(
                 state = state.copy(stage = SplashStage.WaitingForOpenAd),
-                effects = listOf(SplashEffect.RunColdStartAd),
             )
         is AppLaunchRequest.NotificationTarget ->
             SplashTransition(state.copy(stage = SplashStage.Finishing))
@@ -115,4 +129,12 @@ internal fun SplashMachineState.toUiState(): SplashUiState =
     SplashUiState(
         stage = stage,
         paused = pauseReasons.isNotEmpty(),
+        progressStage =
+            when {
+                stage == SplashStage.Preparing -> SplashProgressStage.Preparing
+                stage == SplashStage.WaitingForOpenAd && openAdLoaded -> SplashProgressStage.ShowingAd
+                stage == SplashStage.WaitingForOpenAd -> SplashProgressStage.RequestingAd
+                stage == SplashStage.Finishing -> SplashProgressStage.Finishing
+                else -> SplashProgressStage.Completed
+            },
     )

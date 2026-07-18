@@ -1,6 +1,10 @@
 package com.quickcleanpro.phonecleaner.app.navigation.register
 
+import android.os.Handler
+import android.os.Looper
+import android.os.ResultReceiver
 import android.os.SystemClock
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -16,9 +20,11 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.quickcleanpro.phonecleaner.app.AppConfig
+import com.quickcleanpro.phonecleaner.app.OPEN_AD_ACTIVE
+import com.quickcleanpro.phonecleaner.app.OPEN_AD_STATE_CHANGED
+import com.quickcleanpro.phonecleaner.app.OpenAdHostContract
 import com.quickcleanpro.phonecleaner.app.navigation.AppDestination
 import com.quickcleanpro.phonecleaner.app.navigation.AppNavigator
-import com.quickcleanpro.phonecleaner.common.ads.AdRuntime
 import com.quickcleanpro.phonecleaner.common.analytics.AnalyticsTracker
 import com.quickcleanpro.phonecleaner.common.intent.openUrl
 import com.quickcleanpro.phonecleaner.app.runtime.external.ExternalActivityLauncher
@@ -34,7 +40,6 @@ internal fun NavGraphBuilder.registerSplashRoute(
     navController: NavHostController,
     navigator: AppNavigator,
     launchCoordinator: AppLaunchCoordinator,
-    adRuntime: AdRuntime,
     externalActivityLauncher: ExternalActivityLauncher,
     splashPermissionPaused: Boolean,
 ) {
@@ -47,6 +52,24 @@ internal fun NavGraphBuilder.registerSplashRoute(
         val splashStartedAt = remember { SystemClock.elapsedRealtime() }
         var externalLinkActive by remember { mutableStateOf(false) }
         var displayTracked by remember { mutableStateOf(false) }
+        val openAdStateReceiver =
+            remember(viewModel) {
+                object : ResultReceiver(Handler(Looper.getMainLooper())) {
+                    override fun onReceiveResult(resultCode: Int, resultData: android.os.Bundle?) {
+                        if (resultCode != OPEN_AD_STATE_CHANGED) return
+                        viewModel.onAction(
+                            SplashAction.OpenAdStateChanged(
+                                resultData?.getBoolean(OPEN_AD_ACTIVE) == true,
+                            ),
+                        )
+                    }
+                }
+            }
+        val openAdHostLauncher =
+            rememberLauncherForActivityResult(OpenAdHostContract()) {
+                viewModel.onAction(SplashAction.OpenAdStateChanged(false))
+                viewModel.onAction(SplashAction.OpenAdFinished)
+            }
 
         LaunchedEffect(pendingRequest) {
             val request = pendingRequest ?: return@LaunchedEffect
@@ -57,17 +80,16 @@ internal fun NavGraphBuilder.registerSplashRoute(
         LaunchedEffect(splashPermissionPaused) {
             viewModel.onAction(SplashAction.PermissionPauseChanged(splashPermissionPaused))
         }
-        LaunchedEffect(viewModel, adRuntime, navigator, navController) {
+        LaunchedEffect(viewModel, navigator, navController) {
             viewModel.effects.collect { effect ->
                 when (effect) {
-                    SplashEffect.RunColdStartAd ->
-                        adRuntime.runColdStart(
-                            context = context.applicationContext,
-                            onOpenAdStateChanged = { active ->
-                                viewModel.onAction(SplashAction.OpenAdStateChanged(active))
-                            },
-                            onFinished = { viewModel.onAction(SplashAction.OpenAdFinished) },
-                        )
+                    SplashEffect.RunColdStartAd -> {
+                        runCatching { openAdHostLauncher.launch(openAdStateReceiver) }
+                            .onFailure {
+                                viewModel.onAction(SplashAction.OpenAdStateChanged(false))
+                                viewModel.onAction(SplashAction.OpenAdFinished)
+                            }
+                    }
                     is SplashEffect.OpenNotificationTarget ->
                         navigator.openNotificationTarget(effect.route)
                     is SplashEffect.Navigate -> navigator.replace(effect.destination)

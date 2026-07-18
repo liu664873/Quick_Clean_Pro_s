@@ -71,7 +71,6 @@ internal fun AppNavGraph(
             navController = navController,
             navigator = navigator,
             launchCoordinator = launchCoordinator,
-            adRuntime = runtime.ads,
             externalActivityLauncher = runtime.externalActivities,
             splashPermissionPaused = splashPaused,
         )

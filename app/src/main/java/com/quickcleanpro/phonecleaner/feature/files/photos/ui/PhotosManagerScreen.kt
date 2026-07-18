@@ -12,19 +12,16 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.quickcleanpro.phonecleaner.R
 import com.quickcleanpro.phonecleaner.app.navigation.feature.FeatureKey
-import com.quickcleanpro.phonecleaner.common.ui.components.CleanXBottomActionBar
+import com.quickcleanpro.phonecleaner.feature.files.shared.ui.FileManagerDeleteBottomBar
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.FileManagerScaffold
 import com.quickcleanpro.phonecleaner.feature.files.shared.FileOperationPhase
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.FileManagerPageBrush
@@ -38,7 +35,6 @@ import com.quickcleanpro.phonecleaner.feature.files.shared.FileManagerFlowEffect
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.FileOperationPhaseContent
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.FileManagerAction
 import com.quickcleanpro.phonecleaner.feature.files.shared.ui.FileManagerGalleryBrowserView
-import com.quickcleanpro.phonecleaner.common.format.FileSizeFormatter
 
 @Composable
 internal fun PhotosManagerScreen(
@@ -67,16 +63,10 @@ internal fun PhotosManagerScreen(
         },
         bottomBar = {
             if (permissionGranted && state.phase == FileOperationPhase.Browsing && !isDetailMode) {
-                CleanXBottomActionBar(
+                FileManagerDeleteBottomBar(
                     enabled = state.selectedIds.isNotEmpty(),
-                    text = if (state.selectedIds.isNotEmpty()) {
-                        stringResource(R.string.file_delete_size, FileSizeFormatter.format(state.selectedSizeBytes))
-                    } else stringResource(R.string.file_delete),
+                    selectedSizeBytes = state.selectedSizeBytes,
                     onClick = { onAction(FileManagerAction.RequestDelete) },
-                    backgroundColor = Color.Transparent,
-                    buttonModifier = Modifier.height(52.dp),
-                    buttonCornerRadius = 10.dp,
-                    buttonFontSize = 20.sp,
                 )
             }
         },

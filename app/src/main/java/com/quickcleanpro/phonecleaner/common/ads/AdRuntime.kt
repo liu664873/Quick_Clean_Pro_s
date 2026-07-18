@@ -102,11 +102,11 @@ class AdRuntime internal constructor(
         )
     }
 
-    fun runColdStart(
+    internal fun runColdStart(
         context: Context,
         onOpenAdStateChanged: (Boolean) -> Unit = {},
         onFinished: () -> Unit,
-    ) = runColdStart(
+    ): ColdStartAdSession = runColdStart(
         preloadStartup = { preload(AdPreloadStage.Startup, context) },
         onOpenAdStateChanged = onOpenAdStateChanged,
         onFinished = onFinished,
@@ -116,19 +116,24 @@ class AdRuntime internal constructor(
         preloadStartup: () -> Unit,
         onOpenAdStateChanged: (Boolean) -> Unit = {},
         onFinished: () -> Unit,
-    ) {
+    ): ColdStartAdSession {
         val releaseSuppression = appOpenGuard.acquire(AppOpenReason.Startup)
-        val finish = once {
-            releaseSuppression()
-            onFinished()
-        }
-        showStartupConsent {
-            preloadStartup()
-            showOpenAd(
-                onOpenAdStateChanged = onOpenAdStateChanged,
-                onContinue = finish,
+        val session =
+            ColdStartAdSessionHandle(
+                releaseSuppression = releaseSuppression,
+                onFinished = onFinished,
             )
-        }
+        session.track(showStartupConsent {
+            if (!session.isActive()) return@showStartupConsent
+            preloadStartup()
+            session.track(
+                showOpenAd(
+                    onOpenAdStateChanged = onOpenAdStateChanged,
+                    onContinue = session::finish,
+                ),
+            )
+        })
+        return session
     }
 
     fun preload(stage: AdPreloadStage, context: Context) {
@@ -267,25 +272,31 @@ class AdRuntime internal constructor(
         }
     }
 
-    private fun showStartupConsent(onContinue: () -> Unit) {
+    private fun showStartupConsent(onContinue: () -> Unit): AdRuntimeCancellation {
         if (!driver.isActivityAvailable()) {
             logW(TAG_STARTUP, "skip startup consent: activity unavailable")
             onContinue()
-            return
+            return AdRuntimeCancellation {}
         }
+        val completed = AtomicBoolean(false)
+        val showStarted = AtomicBoolean(false)
         var initTimeout: AdRuntimeCancellation? = null
         var showTimeout: AdRuntimeCancellation? = null
-        val finish = once {
+
+        fun finish() {
+            if (!completed.compareAndSet(false, true)) return
             initTimeout?.cancel()
             showTimeout?.cancel()
             onContinue()
         }
-        val showConsent = once {
+
+        fun showConsent() {
+            if (completed.get() || !showStarted.compareAndSet(false, true)) return
             initTimeout?.cancel()
             if (!driver.isActivityAvailable()) {
                 logW(TAG_STARTUP, "skip startup consent show: activity unavailable")
                 finish()
-                return@once
+                return
             }
             logD(TAG_STARTUP, "show startup consent")
             showTimeout = scheduler.schedule(STARTUP_CONSENT_SHOW_TIMEOUT_MS) {
@@ -318,32 +329,39 @@ class AdRuntime internal constructor(
             logW(TAG_STARTUP, "init startup consent failed", throwable)
             finish()
         }
+        return AdRuntimeCancellation {
+            if (completed.compareAndSet(false, true)) {
+                initTimeout?.cancel()
+                showTimeout?.cancel()
+            }
+        }
     }
 
     private fun showOpenAd(
         onOpenAdStateChanged: (Boolean) -> Unit,
         onContinue: () -> Unit,
-    ) {
+    ): AdRuntimeCancellation {
         if (!driver.isActivityAvailable()) {
             logW(TAG_STARTUP, "skip cold start open ad: activity unavailable")
             onOpenAdStateChanged(false)
             onContinue()
-            return
+            return AdRuntimeCancellation {}
         }
         val loaded = AtomicBoolean(false)
         val completed = AtomicBoolean(false)
+        val closeHandled = AtomicBoolean(false)
         var startTimeout: AdRuntimeCancellation? = null
-        var totalTimeout: AdRuntimeCancellation? = null
         var closeSettle: AdRuntimeCancellation? = null
 
-        fun continueOnce() {
+        fun complete(notify: Boolean) {
             if (!completed.compareAndSet(false, true)) return
             startTimeout?.cancel()
-            totalTimeout?.cancel()
             closeSettle?.cancel()
             onOpenAdStateChanged(false)
-            onContinue()
+            if (notify) onContinue()
         }
+
+        fun continueOnce() = complete(notify = true)
 
         startTimeout = scheduler.schedule(OPEN_AD_START_TIMEOUT_MS) {
             if (!loaded.get()) {
@@ -355,6 +373,7 @@ class AdRuntime internal constructor(
             driver.showOpenAd(
                 areaKey = AdAreaKeys.Open.OPEN_PAGE,
                 onClosed = {
+                    if (completed.get() || !closeHandled.compareAndSet(false, true)) return@showOpenAd
                     logD(TAG_STARTUP, "cold start open ad closed")
                     val delay = if (loaded.get()) OPEN_AD_CLOSE_SETTLE_MS else 0L
                     closeSettle = scheduler.schedule(delay, ::continueOnce)
@@ -362,10 +381,6 @@ class AdRuntime internal constructor(
                 onLoaded = {
                     if (!completed.get() && loaded.compareAndSet(false, true)) {
                         startTimeout?.cancel()
-                        totalTimeout = scheduler.schedule(OPEN_AD_TOTAL_TIMEOUT_MS) {
-                            logW(TAG_STARTUP, "cold start open ad total timeout")
-                            continueOnce()
-                        }
                         onOpenAdStateChanged(true)
                         logD(TAG_STARTUP, "cold start open ad loaded")
                     }
@@ -375,6 +390,7 @@ class AdRuntime internal constructor(
             logW(TAG_STARTUP, "show cold start open ad failed", throwable)
             continueOnce()
         }
+        return AdRuntimeCancellation { complete(notify = false) }
     }
 
     private fun restoreExternalActivityAppOpen() {
@@ -397,7 +413,6 @@ class AdRuntime internal constructor(
         const val STARTUP_CONSENT_INIT_TIMEOUT_MS = 6_500L
         const val STARTUP_CONSENT_SHOW_TIMEOUT_MS = 6_500L
         const val OPEN_AD_START_TIMEOUT_MS = 6_500L
-        const val OPEN_AD_TOTAL_TIMEOUT_MS = 30_000L
         const val OPEN_AD_CLOSE_SETTLE_MS = 800L
         const val EXTERNAL_ACTIVITY_RETURN_COOLDOWN_MS = 1_200L
     }
@@ -466,6 +481,51 @@ private class AdvertiseAdRuntimeDriver(
 
 internal fun interface AdRuntimeCancellation {
     fun cancel()
+}
+
+internal fun interface ColdStartAdSession {
+    fun cancel()
+}
+
+private class ColdStartAdSessionHandle(
+    private val releaseSuppression: () -> Unit,
+    private val onFinished: () -> Unit,
+) : ColdStartAdSession {
+    private val completed = AtomicBoolean(false)
+    private val lock = Any()
+    private val cancellations = mutableListOf<AdRuntimeCancellation>()
+
+    fun isActive(): Boolean = !completed.get()
+
+    fun track(cancellation: AdRuntimeCancellation) {
+        val cancelImmediately =
+            synchronized(lock) {
+                if (completed.get()) {
+                    true
+                } else {
+                    cancellations += cancellation
+                    false
+                }
+            }
+        if (cancelImmediately) cancellation.cancel()
+    }
+
+    fun finish() = complete(notify = true)
+
+    override fun cancel() = complete(notify = false)
+
+    private fun complete(notify: Boolean) {
+        if (!completed.compareAndSet(false, true)) return
+        val pending =
+            synchronized(lock) {
+                val snapshot = cancellations.toList()
+                cancellations.clear()
+                snapshot
+            }
+        pending.forEach(AdRuntimeCancellation::cancel)
+        releaseSuppression()
+        if (notify) onFinished()
+    }
 }
 
 internal interface AdRuntimeScheduler {

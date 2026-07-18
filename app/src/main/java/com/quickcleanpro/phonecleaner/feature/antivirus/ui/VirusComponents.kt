@@ -61,6 +61,7 @@ internal data class VirusFeatureItem(
 internal fun VirusPageScaffold(
     modifier: Modifier = Modifier,
     bottomPadding: Dp = 0.dp,
+    bottomBar: @Composable () -> Unit = {},
     onBack: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
@@ -73,6 +74,7 @@ internal fun VirusPageScaffold(
         scrollEnabled = false,
         contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = bottomPadding),
         onBack = onBack,
+        bottomBar = bottomBar,
     ) {
         content()
     }

@@ -355,6 +355,7 @@
     <string name="onboarding_get_started">开始使用</string>
     <string name="onboarding_checking_device_info">正在检查设备\n信息...</string>
     <string name="splash_accept_prefix">继续即表示你接受我们的</string>
+    <string name="open_ad_loading">广告正在加载中</string>
 
     <!-- Toolbox -->
     <string name="app_usage">应用使用详情</string>

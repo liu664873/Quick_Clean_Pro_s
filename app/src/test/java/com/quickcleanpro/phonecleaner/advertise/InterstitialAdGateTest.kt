@@ -69,7 +69,7 @@ class AdRuntimeStartupTest {
     }
 
     @Test
-    fun loadedOpenAdTotalTimeoutReleasesSuppressionAndFinishes() {
+    fun loadedOpenAdWaitsForSdkCloseWithoutTotalTimeout() {
         val driver = FakeAdRuntimeDriver()
         val scheduler = FakeAdRuntimeScheduler()
         val runtime = fakeAdRuntime(driver = driver, scheduler = scheduler)
@@ -85,8 +85,69 @@ class AdRuntimeStartupTest {
         driver.loadOpenAd()
         scheduler.advanceBy(30_000L)
 
+        assertEquals(listOf(true), openStates)
+        assertEquals(0, finishCount)
+        assertFalse(driver.appOpenEnabledState)
+
+        driver.closeOpenAd()
+        scheduler.advanceBy(800L)
+
         assertEquals(listOf(true, false), openStates)
         assertEquals(1, finishCount)
+        assertTrue(driver.appOpenEnabledState)
+    }
+
+    @Test
+    fun openAdLoadTimeoutIgnoresLateSdkCallbacks() {
+        val driver = FakeAdRuntimeDriver()
+        val scheduler = FakeAdRuntimeScheduler()
+        val runtime = fakeAdRuntime(driver = driver, scheduler = scheduler)
+        val openStates = mutableListOf<Boolean>()
+        var finishCount = 0
+
+        runtime.runColdStart(
+            preloadStartup = {},
+            onOpenAdStateChanged = openStates::add,
+            onFinished = { finishCount += 1 },
+        )
+        driver.completeConsent()
+        scheduler.advanceBy(6_500L)
+
+        assertEquals(listOf(false), openStates)
+        assertEquals(1, finishCount)
+        assertTrue(driver.appOpenEnabledState)
+
+        driver.loadOpenAd()
+        driver.closeOpenAd()
+        scheduler.advanceBy(800L)
+
+        assertEquals(listOf(false), openStates)
+        assertEquals(1, finishCount)
+    }
+
+    @Test
+    fun cancellingColdStartSessionRestoresAppOpenWithoutFinishing() {
+        val driver = FakeAdRuntimeDriver()
+        val scheduler = FakeAdRuntimeScheduler()
+        val runtime = fakeAdRuntime(driver = driver, scheduler = scheduler)
+        val openStates = mutableListOf<Boolean>()
+        var finishCount = 0
+
+        val session =
+            runtime.runColdStart(
+                preloadStartup = {},
+                onOpenAdStateChanged = openStates::add,
+                onFinished = { finishCount += 1 },
+            )
+        driver.completeConsent()
+        driver.loadOpenAd()
+
+        session.cancel()
+        driver.closeOpenAd()
+        scheduler.advanceBy(30_000L)
+
+        assertEquals(listOf(true, false), openStates)
+        assertEquals(0, finishCount)
         assertTrue(driver.appOpenEnabledState)
     }
 

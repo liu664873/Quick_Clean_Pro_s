@@ -57,7 +57,7 @@ object AdvertiseSdkAdapter {
     }
 
     fun preloadStartup(context: Context) {
-        preload(context, AdvertiseSdk.LOAD_TIME_OPEN_APP, includeOpen = true)
+        preload(context, AdvertiseSdk.LOAD_TIME_OPEN_APP, includeOpen = false)
     }
 
     fun preloadMainPage(context: Context) {

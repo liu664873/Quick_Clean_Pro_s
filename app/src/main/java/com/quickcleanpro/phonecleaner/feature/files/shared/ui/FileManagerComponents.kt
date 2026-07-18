@@ -10,6 +10,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +24,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.quickcleanpro.phonecleaner.R
+import com.quickcleanpro.phonecleaner.common.format.FileSizeFormatter
 import com.quickcleanpro.phonecleaner.common.ui.components.CleanXBlue
+import com.quickcleanpro.phonecleaner.common.ui.components.CleanXBottomActionBar
 
 internal val FileManagerListBottomPadding = 112.dp
 internal val FileManagerPageBrush = Brush.verticalGradient(
@@ -33,6 +36,28 @@ internal val FileManagerCardColor = Color.White
 internal val FileManagerNavy = Color(0xFF2D3748)
 internal val FileManagerMutedNavy = Color(0xFF8190A5)
 internal val FileManagerDividerColor = Color(0xFFE9EEF5)
+
+@Composable
+internal fun FileManagerDeleteBottomBar(
+    enabled: Boolean,
+    selectedSizeBytes: Long,
+    onClick: () -> Unit,
+) {
+    CleanXBottomActionBar(
+        enabled = enabled,
+        text =
+            if (enabled) {
+                stringResource(R.string.file_delete_size, FileSizeFormatter.format(selectedSizeBytes))
+            } else {
+                stringResource(R.string.file_delete)
+            },
+        onClick = onClick,
+        backgroundColor = Color.Transparent,
+        buttonModifier = Modifier.height(52.dp),
+        buttonCornerRadius = 10.dp,
+        buttonFontSize = 20.sp,
+    )
+}
 
 @Composable
 internal fun SelectionCircle(selected: Boolean, modifier: Modifier = Modifier) {
